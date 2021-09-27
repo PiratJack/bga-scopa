@@ -8,6 +8,14 @@
  * -----
  */
 
+/* Main board */
+#scp_board {
+    min-width:800px;
+    width: min-content;
+    margin-left:auto;
+    margin-right:auto;
+}
+
 
 /* All card holders */
 .scp_cardholder {
@@ -15,10 +23,64 @@
     min-width: 120px;
 }
 
+/****************** Cards on table ******************/
+#tablehand {
+    width: min-content;
+    float:left;
+    margin-top:0px;
+}
 
-/* Player's hand */
+/****************** Card played & deck ******************/
+#interactions {
+    float: right;
+    width: 307px;
+    margin-top: 0;
+}
+
+@media only screen and (max-width: 850px) {
+    /* Move them so they're within the screen */
+    #interactions {
+        float:none;
+    }
+}
+
+#cardplayed,
+#deck {
+    display: inline-block;
+    margin-top:0px;
+    width: 120px;
+}
+
+/* Hide the played card by default (it'll get filled by JS) */
+#cardplayedcard {
+    background-image: none !important;
+}
+
+#deck {
+    float: right;
+}
+
+/****************** Capture choices ******************/
+#capturechoice {
+    width: min-content;
+    min-width: 380px;
+    clear:both;
+}
+
+/* Group of cards to capture */
+.scp_capturegroup {
+    display: inline-block;
+    cursor: pointer;
+    border: 3px red solid;
+    padding: 10px;
+    margin-right: 10px;
+}
+
+
+/****************** Player's hand ******************/
 #myhand {
     width: min-content;
+    clear:both;
 }
 
 #myhandcards {
@@ -30,50 +92,13 @@
     display: none;
 }
 
-/* Cards on table */
-#tablehand {
-    width: min-content;
+/* Card can capture */
+.scp_canCapture {
+    border-bottom: 2px black dotted !important;
+    border-right: 2px black dotted !important;
 }
 
-
-/* Choice to capture */
-#capturechoice {
-    width: min-content;
-    min-width: 380px;
-}
-
-/* Card played & deck */
-#interactions {
-    position: absolute;
-    left: 500px;
-    top: 0px;
-    width: 307px;
-    margin-top: 0;
-}
-
-#cardplayed,
-#deck {
-    display: inline-block;
-    width: 120px;
-}
-
-#deck {
-    float: right;
-}
-
-@media only screen and (max-width: 850px) {
-
-    /* Move them so they're within the screen */
-    #interactions {
-        position: unset;
-    }
-}
-
-#cardplayedcard {
-    background-image: none !important;
-}
-
-/* Cards and decks */
+/****************** Cards and decks ******************/
 .scp_card,
 .scp_deck {
     display: inline-block;
@@ -111,21 +136,6 @@
     height: 111px;
     line-height: 111px;
     font-size: 28px;
-}
-
-/* Card can capture */
-.scp_canCapture {
-    border-bottom: 2px black dotted !important;
-    border-right: 2px black dotted !important;
-}
-
-/* Group of cards to capture */
-.scp_capturegroup {
-    display: inline-block;
-    cursor: pointer;
-    border: 3px red solid;
-    padding: 10px;
-    margin-right: 10px;
 }
 
 .scp_hidden {

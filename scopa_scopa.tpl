@@ -10,48 +10,49 @@
 -------
 -->
 
-<div id="tablehand" class="scp_cardholder whiteblock">
-    <h3>
-        {CARDS_ON_TABLE}
-    </h3>
-    <div id="tablehandcards">
-    </div>
-</div>
+<div id="scp_board">
 
-
-<div id="interactions">
-    <div id="cardplayed" class="scp_cardholder whiteblock">
+    <div id="tablehand" class="scp_cardholder whiteblock">
         <h3>
-            {CARD_PLAYED}
+            {CARDS_ON_TABLE}
         </h3>
-        <div id="cardplayedcard" class="scp_card">
+        <div id="tablehandcards">
         </div>
     </div>
 
-    <div id="deck" class="scp_cardholder whiteblock">
-        <h3>
-            {DECK}
-        </h3>
-        <div id="deckcard" class="scp_deck">
-        </div>
-    </div>
-</div>
-
-<div id="capturechoice" class="scp_cardholder whiteblock">
-    <h3>
-        {CHOOSE_CAPTURE}
-        <h3>
-            <div class="capturechoiceholder" id="capturechoiceholder">
+    <div id="interactions">
+        <div id="cardplayed" class="scp_cardholder whiteblock">
+            <h3>
+                {CARD_PLAYED}
+            </h3>
+            <div id="cardplayedcard" class="scp_card">
             </div>
-</div>
+        </div>
 
-<div id="myhand" class="scp_cardholder whiteblock">
-    <h3>{MY_HAND}</h3>
-    <div id="myhandcards">
+        <div id="deck" class="scp_cardholder whiteblock">
+            <h3>
+                {DECK}
+            </h3>
+            <div id="deckcard" class="scp_deck">
+            </div>
+        </div>
     </div>
+
+    <div id="capturechoice" class="scp_cardholder whiteblock">
+        <h3>
+            {CHOOSE_CAPTURE}
+            </h3>
+                <div class="capturechoiceholder" id="capturechoiceholder">
+                </div>
+    </div>
+
+    <div id="myhand" class="scp_cardholder whiteblock">
+        <h3>{MY_HAND}</h3>
+        <div id="myhandcards">
+        </div>
+    </div>
+
 </div>
-
-
 
 
 <script type="text/javascript">
