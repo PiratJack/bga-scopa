@@ -644,7 +644,7 @@ class scopa extends Table
             ];
         }
         $score_table_display[] = $header;
-        // Default all player's scores to 0 for each row (otherwise they're not displayed)
+        // This is used to default all player's scores to 0 for each row (otherwise they're not displayed)
         $player_to_zero = array_fill_keys(array_keys($players), 0);
         foreach ($scoring_rows as $code => $label) {
             $score = $score_table[$code];
