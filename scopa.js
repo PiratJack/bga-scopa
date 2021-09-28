@@ -387,7 +387,7 @@ define([
             // Notification setup
             setupNotifications: function() {
                 dojo.subscribe('cardPlayedToTable', this, 'notif_cardPlayedToTable');
-                this.notifqueue.setSynchronous('cardPlayedToTable', 500);
+                this.notifqueue.setSynchronous('cardPlayedToTable', 1500);
 
                 dojo.subscribe('cardPlayedAndCapture', this, 'notif_cardPlayedAndCapture');
                 this.notifqueue.setSynchronous('cardPlayedAndCapture', 2000);
