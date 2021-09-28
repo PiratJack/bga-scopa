@@ -437,13 +437,7 @@ class scopa extends Table
         self::DbQuery($sql);
 
         // Notify all players about the card's table
-        self::notifyAllPlayers(
-            'tableCards',
-            '',
-            [
-                'cards' => $cards,
-            ]
-        );
+        $this->notif_cardsOnTable();
 
         // Next, deal cards to each player
         $this->gamestate->nextState();
@@ -591,8 +585,8 @@ class scopa extends Table
 
                 $prime_points = array_map(
                     function ($card) use ($point_per_card) {
-                            return $point_per_card[$card['type_arg']];
-                        },
+                        return $point_per_card[$card['type_arg']];
+                    },
                     $cards_of_color
                 );
                 if (!empty($prime_points)) {
