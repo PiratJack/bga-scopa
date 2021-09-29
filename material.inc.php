@@ -9,14 +9,10 @@
  * -----
  */
 $this->colors = [
-    1 => ['name' => clienttranslate('coin'),
-        'nametr' => self::_('coin'), ],
-    2 => ['name' => clienttranslate('cup'),
-        'nametr' => self::_('cup'), ],
-    3 => ['name' => clienttranslate('sword'),
-        'nametr' => self::_('sword'), ],
-    4 => ['name' => clienttranslate('club'),
-        'nametr' => self::_('club'), ],
+    1 => ['name' => clienttranslate('coin')],
+    2 => ['name' => clienttranslate('cup')],
+    3 => ['name' => clienttranslate('sword')],
+    4 => ['name' => clienttranslate('club')],
 ];
 
 $this->values_label = [

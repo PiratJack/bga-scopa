@@ -151,6 +151,30 @@ class scopa extends Table
         return $combinations;
     }
 
+    // Formats cards for display purpose
+    public function cardsToDisplay($cards)
+    {
+        $cards_by_type = [];
+        foreach ($cards as $card) {
+            if (!array_key_exists($card['type'], $cards_by_type)) {
+                $cards_by_type[$card['type']] = [];
+            }
+            $cards_by_type[$card['type']][] = $card['type_arg'];
+        }
+        ksort($cards_by_type);
+
+        $cards_display = [];
+        foreach ($cards_by_type as $type => $cards_of_type) {
+            $cards_display[$type] = $this->colors[$type]['name'].' :';
+
+            foreach ($cards_of_type as $card_value) {
+                $cards_display[$type] .= '&nbsp;' . $this->values_label[$card_value];
+            }
+        }
+
+        return implode('<br />', $cards_display);
+    }
+
     // Sends counts of data in player's hands and deck
     public function notif_cardsCount()
     {
@@ -190,13 +214,16 @@ class scopa extends Table
 
         // Cards in player hand
         $cards = $this->cards->getCardsInLocation('hand', $player_id);
-        self::notifyPlayer($player_id, 'cardsInHand', '', ['cards' => $cards]);
+        self::notifyPlayer($player_id, 'cardsInHand', 'Your cards are: <br />${cards_display}', ['cards' => $cards,
+        'cards_display' => $this->cardsToDisplay($cards)]);
     }
 
     // Sends the cards that are on the table
     public function notif_cardsOnTable()
     {
-        self::notifyAllPlayers('cardsOnTable', '', ['cards' => $this->cards->getCardsInLocation('table')]);
+        $cards = $this->cards->getCardsInLocation('table');
+        self::notifyAllPlayers('cardsOnTable', 'Cards dealt to the table: <br />${cards_display}', ['cards' => $cards,
+        'cards_display' => $this->cardsToDisplay($cards)]);
     }
 
     // Updates player's scores
@@ -358,7 +385,7 @@ class scopa extends Table
             // Notify about capture
             self::notifyAllPlayers(
                 'cardPlayedAndCapture',
-                clienttranslate('${player_name} plays ${value_label} of ${color_label} and captures ${nb_capture} card(s)'),
+                clienttranslate('${player_name} plays ${value_label} of ${color_label} and captures ${nb_capture} card(s):<br />${cards_display}'),
                 [
                     'i18n' => ['value_label', 'color_label'],
                     'player_id' => $player_id,
@@ -370,6 +397,7 @@ class scopa extends Table
                     'value_label' => $this->values_label[$card_played['type_arg']],
                     'color' => $card_played['type'],
                     'color_label' => $this->colors[$card_played['type']]['name'],
+                    'cards_display' => $this->cardsToDisplay($capture),
                 ]
             );
 
@@ -493,14 +521,16 @@ class scopa extends Table
         $player_last_capture = self::getCollectionFromDB($sql);
         if (1 == count($player_last_capture)) {
             $player_last_capture = array_pop($player_last_capture)['player_id'];
+            $cards = $this->cards->getCardsInLocation('table');
             $this->cards->moveAllCardsInLocation('table', 'capture', null, $player_last_capture);
 
             self::notifyAllPlayers(
                 'playerCapturesTable',
-                clienttranslate('${player_name} captures all remaining cards'),
+                clienttranslate('${player_name} captures all remaining cards:<br />${cards_display}'),
                 [
                     'player_id' => $player_last_capture,
                     'player_name' => self::getPlayerNameById($player_last_capture),
+                    'cards_display' => $this->cardsToDisplay($cards),
                 ]
             );
         }
