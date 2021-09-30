@@ -245,7 +245,7 @@ define([
                     var source = 'overall_player_board_' + playerId;
 
                 var cardPlayed = this.renderCard(card, source);
-                var cardCreate = this.slideToObject(cardPlayed, 'cardplayedcard');
+                var cardCreate = this.slideToObject(cardPlayed, 'cardplayedcard', 750);
 
                 if (this.isCurrentPlayerActive())
                     dojo.connect(cardCreate, 'onBegin', () => this.playerCards.removeFromStockById(card.id));
@@ -255,7 +255,7 @@ define([
 
                 // Card played towards table
                 if (captures == undefined) {
-                    var cardToTable = this.slideToObject(cardPlayed, 'tablehandcards');
+                    var cardToTable = this.slideToObject(cardPlayed, 'tablehandcards', 750);
                     dojo.connect(cardToTable, 'onEnd', (node) => {
                         dojo.destroy(node);
                         this.tableCards.addToStockWithId(card.face_id, card.id);
@@ -268,14 +268,14 @@ define([
                     for (i in captures) {
                         var cardCaptured = captures[i];
                         var cardCapturedDiv = this.renderCard(cardCaptured, 'tablehandcards_item_' + cardCaptured.id);
-                        var cardCapturedAnim = this.slideToObject(cardCapturedDiv, 'cardplayedcard');
+                        var cardCapturedAnim = this.slideToObject(cardCapturedDiv, 'cardplayedcard', 750);
                         dojo.connect(cardCapturedAnim, 'onEnd', dojo.destroy);
                         dojo.connect(cardCapturedAnim, 'beforeBegin', (node) => this.tableCards.removeFromStockById(node.dataset.card));
                         animations.push(cardCapturedAnim);
                     }
 
                     // Card collected by player
-                    var cardCapture = this.slideToObject(cardPlayed, source);
+                    var cardCapture = this.slideToObject(cardPlayed, source, 750);
                     dojo.connect(cardCapture, 'onEnd', dojo.destroy);
                     animations.push(cardCapture);
                 }
