@@ -54,6 +54,7 @@ define([
                 // Setup card manipulator
                 this.playerCards = new ebg.stock();
                 this.playerCards.item_margin = 10;
+                this.playerCards.onItemCreate = dojo.hitch(this, 'setupNewCard');
                 this.playerCards.create(this, $('myhandcards'), this.cardwidth, this.cardheight);
                 this.playerCards.autowidth = true;
                 // Do not allow any selection now. It'll be done by playerTurn state
@@ -79,6 +80,7 @@ define([
                 // Setup card manipulator
                 this.tableCards = new ebg.stock();
                 this.tableCards.item_margin = 10;
+                this.tableCards.onItemCreate = dojo.hitch(this, 'setupNewCard');
                 this.tableCards.create(this, $('tablehandcards'), this.cardwidth, this.cardheight);
                 this.tableCards.autowidth = true;
                 // No card allowed to be selected
@@ -108,6 +110,26 @@ define([
                     node: 'capturechoice',
                     duration: 0
                 }).play();
+
+
+                // Hide or display card labels
+                dojo.place(this.format_block('jstpl_userDisplayPrefs', {
+                    display_card_labels: _('Display labels on cards?'),
+                    no: _('No'),
+                    yes: _('Yes'),
+                }), 'player_boards', 'first');
+
+                dojo.connect($('scp_display_card_labels_select'), 'change', (evt) => {
+                    if ($('scp_display_card_labels_select').value == '0') {
+                        dojo.query('.scp_card_label').addClass('scp_hidden')
+                    } else {
+                        dojo.query('.scp_card_label').removeClass('scp_hidden')
+                    }
+                });
+
+
+
+
             },
 
 
@@ -151,6 +173,14 @@ define([
             // Converts the card's color+value to a position in the cards.png file
             getCardFacePosition: function(color, value) {
                 return (parseInt(color) - 1) * 10 + (parseInt(value) - 1);
+            },
+
+            // Converts the card's position in the cards.png file to a color+value
+            getCardColorAndValue: function(cardFaceId) {
+                return {
+                    'color': Math.floor(cardFaceId / 10) + 1,
+                    'value': cardFaceId % 10 + 1,
+                }
             },
 
             // Displays a card in a given element
@@ -316,6 +346,21 @@ define([
                     var value = card.type_arg;
                     this.tableCards.addToStockWithId(this.getCardFacePosition(color, value), card.id);
                 }
+            },
+
+            // Displays tooltip on cards
+            setupNewCard: function(card_div, card_type_id, card_id) {
+                var card = this.getCardColorAndValue(card_type_id);
+                var text = dojo.string.substitute(_("${value} of ${suit}"), {
+                    'value': this.gamedatas.values_label[card.value],
+                    'suit': this.gamedatas.colors[card.color].name,
+                });
+
+                dojo.place(this.format_block('jstpl_card_label', {
+                    'card_label': text
+                }), card_div.id);
+
+
             },
 
 

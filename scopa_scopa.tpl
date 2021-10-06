@@ -41,9 +41,9 @@
     <div id="capturechoice" class="scp_cardholder whiteblock">
         <h3>
             {CHOOSE_CAPTURE}
-            </h3>
-                <div class="capturechoiceholder" id="capturechoiceholder">
-                </div>
+        </h3>
+        <div class="capturechoiceholder" id="capturechoiceholder">
+        </div>
     </div>
 
     <div id="myhand" class="scp_cardholder whiteblock">
@@ -63,6 +63,18 @@
     var jstpl_capturechoice = '<div id="capturechoice_{option}"></div>';
 
     var jstpl_player_board = '<div class="scp_deck" id="cp_board_${player_id}">${card_count}</div>';
+
+    var jstpl_card_label = '<div class="scp_card_label">${card_label}</div>';
+
+    var jstpl_userDisplayPrefs = `<div class="player-board">
+        <div id="scp_display_card_labels">
+            \${display_card_labels}
+            <select id="scp_display_card_labels_select">
+              <option value='1'>\${yes}</option>
+              <option value='0'>\${no}</option>
+            </select>
+        </div>
+    </div>`;
 </script>
 
 

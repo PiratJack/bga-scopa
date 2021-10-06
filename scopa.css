@@ -128,6 +128,17 @@
     margin-right: 10px;
 }
 
+.scp_card_label {
+    min-height: 30px;
+    background: #c0c0c0e0;
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    line-height: 30px;
+    font-style: italic;
+    text-align: center;
+}
+
 /* Deck of cards */
 .scp_deck {
     background-image: url('img/deck.jpg');
@@ -187,6 +198,11 @@
     #capturechoice {
         min-width: 680px;
     }
+
+    #deck .scp_deck {
+        line-height: 219px;
+    }
+
 
 
     /****************** Cards and decks ******************/

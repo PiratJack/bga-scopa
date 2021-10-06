@@ -862,6 +862,10 @@ class scopa extends Table
         $sql = 'SELECT player_id id, player_score score FROM player ';
         $result['players'] = self::getCollectionFromDb($sql);
 
+        // Material info (used for displaying card labels)
+        $result['colors'] = $this->colors;
+        $result['values_label'] = $this->values_label;
+
         // Cards in player hand
         $result['hand'] = $this->cards->getCardsInLocation('hand', $current_player_id);
 
