@@ -25,6 +25,11 @@ define([
                 this.cardwidth = 68;
                 this.cardheight = 111;
 
+                if (window.matchMedia("(min-width: 1500px)").matches) {
+                    this.cardwidth = 132;
+                    this.cardheight = 219;
+                }
+
             },
 
             // Initial setup
@@ -48,6 +53,7 @@ define([
 
                 // Setup card manipulator
                 this.playerCards = new ebg.stock();
+                this.playerCards.item_margin = 10;
                 this.playerCards.create(this, $('myhandcards'), this.cardwidth, this.cardheight);
                 this.playerCards.autowidth = true;
                 // Do not allow any selection now. It'll be done by playerTurn state
@@ -72,6 +78,7 @@ define([
 
                 // Setup card manipulator
                 this.tableCards = new ebg.stock();
+                this.tableCards.item_margin = 10;
                 this.tableCards.create(this, $('tablehandcards'), this.cardwidth, this.cardheight);
                 this.tableCards.autowidth = true;
                 // No card allowed to be selected
@@ -390,7 +397,7 @@ define([
                 this.notifqueue.setSynchronous('cardPlayedToTable', 1500);
 
                 dojo.subscribe('cardPlayedAndCapture', this, 'notif_cardPlayedAndCapture');
-                this.notifqueue.setSynchronous('cardPlayedAndCapture', 2000);
+                this.notifqueue.setSynchronous('cardPlayedAndCapture', 3000);
 
                 dojo.subscribe('cardsCount', this, 'notif_cardsCount');
 

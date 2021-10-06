@@ -21,6 +21,7 @@
 .scp_cardholder {
     text-align: center;
     min-width: 120px;
+    min-height: 150px;
 }
 
 /****************** Cards on table ******************/
@@ -33,11 +34,12 @@
 /****************** Card played & deck ******************/
 #interactions {
     float: right;
-    width: 307px;
+    width: 300px;
+    /* 120 (big enough text) * 2 + 20 padding  */
     margin-top: 0;
 }
 
-@media only screen and (max-width: 850px) {
+@media only screen and (max-width: 1100px) {
 
     /* Move them so they're within the screen */
     #interactions {
@@ -50,7 +52,6 @@
 #deck {
     display: inline-block;
     margin-top: 0px;
-    width: 120px;
 }
 
 /* Hide the played card by default (it'll get filled by JS) */
@@ -105,15 +106,26 @@
 .scp_deck {
     display: inline-block;
     position: relative;
-    margin-top: 5px;
-    margin-right: 5px;
     width: 68px;
     height: 111px;
+    border-radius: 10px;
+    box-shadow: 3px 3px 3px #000000a0;
 }
 
 /* Cards (except player's card) */
 .scp_card {
     background-image: url('img/cards.jpg');
+    background-size: 1000%;
+}
+
+/* Hide shadow in "card played" box */
+#cardplayedcard {
+    box-shadow: none;
+}
+
+/* Card in capture group */
+.scp_capturegroup .scp_card {
+    margin-right: 10px;
 }
 
 /* Deck of cards */
@@ -142,4 +154,46 @@
 
 .scp_hidden {
     display: none;
+}
+
+.stockitem {
+    background-size: 1000%;
+    border-radius: 10px;
+    box-shadow: 3px 3px 3px #000000a0;
+}
+
+
+
+
+@media only screen and (min-width: 1720px) {
+
+    #scp_board {
+        min-width: 1240px;
+    }
+
+    /* All card holders */
+    .scp_cardholder {
+        min-width: 152px;
+        /* card + 20 padding */
+        min-height: 260px;
+    }
+
+    /****************** Card played & deck ******************/
+    #interactions {
+        width: 360px;
+        /* (card + 20 padding) * 2 + 20 padding */
+    }
+
+    #capturechoice {
+        min-width: 680px;
+    }
+
+
+    /****************** Cards and decks ******************/
+    .scp_card,
+    .scp_deck,
+    #deck .scp_deck {
+        width: 132px;
+        height: 219px;
+    }
 }
