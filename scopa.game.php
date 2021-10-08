@@ -416,6 +416,23 @@ class scopa extends Table
         $this->gamestate->nextState('playCard');
     }
 
+    // Change of user preferences
+    public function setUserPref($prefs)
+    {
+        $player_id = self::getCurrentPlayerId();
+
+        $sql = 'UPDATE player SET ';
+        $pref_sql = [];
+        foreach ($prefs as $key => $value) {
+            $pref_sql[] = $key.'="'.$value.'" ';
+        }
+        if (!empty($pref_sql)) {
+            $sql .= implode(', ', $pref_sql);
+            $sql .= ' WHERE player_id = '.$player_id;
+            self::DbQuery($sql);
+        }
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     //////////// Game state arguments
     ////////////
@@ -865,6 +882,10 @@ class scopa extends Table
         // Material info (used for displaying card labels)
         $result['colors'] = $this->colors;
         $result['values_label'] = $this->values_label;
+
+        // User preferences
+        $sql = 'SELECT 0, card_deck, display_card_labels FROM player WHERE player_id = '.$current_player_id;
+        $result['user_prefs'] = self::getCollectionFromDB($sql)['0'];
 
         // Cards in player hand
         $result['hand'] = $this->cards->getCardsInLocation('hand', $current_player_id);

@@ -114,8 +114,16 @@
 
 /* Cards (except player's card) */
 .scp_card {
-    background-image: url('img/cards.jpg');
     background-size: 1000%;
+}
+
+/* Card faces */
+.scp_standard_deck {
+    background-image: url('img/cards_standard.jpg') !important;
+}
+
+.scp_italian_deck {
+    background-image: url('img/cards_italian.jpg') !important;
 }
 
 /* Hide shadow in "card played" box */

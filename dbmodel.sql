@@ -19,4 +19,6 @@ CREATE TABLE IF NOT EXISTS `card` (
 
 
 ALTER TABLE `player` ADD `has_last_captured` BOOLEAN NOT NULL,
+                     ADD `card_deck` VARCHAR(20) NOT NULL DEFAULT 'italian',
+                     ADD `display_card_labels` BOOLEAN NOT NULL DEFAULT 1,
                      ADD `scopa_in_round` INT NOT NULL;

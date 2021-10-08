@@ -68,10 +68,17 @@
 
     var jstpl_userDisplayPrefs = `<div class="player-board">
         <div id="scp_display_card_labels">
-            \${display_card_labels}
+            \${display_card_labels}<br />
             <select id="scp_display_card_labels_select">
               <option value='1'>\${yes}</option>
               <option value='0'>\${no}</option>
+            </select>
+        </div>
+        <div id="scp_card_deck">
+            \${card_deck}<br />
+            <select id="scp_card_deck_select">
+              <option value='italian'>\${italian}</option>
+              <option value='standard'>\${standard}</option>
             </select>
         </div>
     </div>`;

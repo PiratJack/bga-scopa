@@ -38,4 +38,37 @@ class action_scopa extends APP_GameAction
 
         self::ajaxResponse();
     }
+
+    /**
+     * Player changes display preferences
+     */
+    public function setUserPref()
+    {
+        self::setAjaxMode();
+
+        $preferences = [
+            'display_card_labels'=> AT_posint,
+            'card_deck'=> AT_alphanum,
+            ];
+
+        // Retrieve arguments
+        $user_preferences = [];
+        foreach ($preferences as $pref_id => $format) {
+            $val = self::getArg($pref_id, $format);
+            if ($val != '') {
+                $user_preferences[$pref_id] = $val;
+            }
+        }
+
+        // Filter values for card deck
+        if (array_key_exists('card_deck', $user_preferences)) {
+            if (!in_array($user_preferences['card_deck'], ['standard', 'italian'])) {
+                $user_preferences['card_deck'] = 'italian';
+            }
+        }
+
+        $this->game->setUserPref($user_preferences);
+
+        self::ajaxResponse();
+    }
 }

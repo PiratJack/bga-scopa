@@ -16,16 +16,16 @@ $this->colors = [
 ];
 
 $this->values_label = [
-    1 => clienttranslate('Ace'),
+    1 => clienttranslate('Ace (1)'),
     2 => '2',
     3 => '3',
     4 => '4',
     5 => '5',
     6 => '6',
     7 => '7',
-    8 => clienttranslate('Jack'),
-    9 => clienttranslate('Knight'),
-    10 => clienttranslate('King'),
+    8 => clienttranslate('Jack (8)'),
+    9 => clienttranslate('Knight (9)'),
+    10 => clienttranslate('King (10)'),
 ];
 
 // How many "prime" point each card represents
