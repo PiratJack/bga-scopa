@@ -797,6 +797,12 @@ class scopa extends Table
 
     public function upgradeTableDb($from_version)
     {
+        if ($from_version < 2110081254) {
+            $sql = 'ALTER TABLE DBPREFIX_player ADD `card_deck` VARCHAR(20) NOT NULL DEFAULT "italian",
+                     ADD `display_card_labels` BOOLEAN NOT NULL DEFAULT 1';
+
+            self::applyDbUpgradeToAllDB($sql);
+        }
     }
 
     protected function getGameName()
