@@ -50,6 +50,35 @@ define([
                 $('deckcard').innerHTML = gamedatas.players_hand.deck;
 
 
+                // User preferences
+                dojo.place(this.format_block('jstpl_userDisplayPrefs', {
+                    display_card_labels: _('Display labels on cards?'),
+                    no: _('No'),
+                    yes: _('Yes'),
+
+                    card_deck: _('Card deck'),
+                    italian: _('Italian'),
+                    standard: _('Standard'),
+                }), 'player_boards', 'first');
+
+                $('scp_display_card_labels_select').value = this.gamedatas.user_prefs.display_card_labels;
+                dojo.connect($('scp_display_card_labels_select'), 'change', (evt) => {
+                    this.ajaxcall("/scopa/scopa/setUserPref.html", {
+                        display_card_labels: $("scp_display_card_labels_select").value
+                    }, () => {});
+                    this.applyUserPrefs();
+                });
+
+                $('scp_card_deck_select').value = this.gamedatas.user_prefs.card_deck;
+                dojo.connect($('scp_card_deck_select'), 'change', (evt) => {
+                    this.ajaxcall("/scopa/scopa/setUserPref.html", {
+                        card_deck: $("scp_card_deck_select").value
+                    }, () => {});
+                    this.applyUserPrefs();
+                });
+                this.applyUserPrefs();
+
+
                 /************* Setup Player's hand ****************/
 
                 // Setup card manipulator
@@ -111,35 +140,6 @@ define([
                     node: 'capturechoice',
                     duration: 0
                 }).play();
-
-
-                // User preferences
-                dojo.place(this.format_block('jstpl_userDisplayPrefs', {
-                    display_card_labels: _('Display labels on cards?'),
-                    no: _('No'),
-                    yes: _('Yes'),
-
-                    card_deck: _('Card deck'),
-                    italian: _('Italian'),
-                    standard: _('Standard'),
-                }), 'player_boards', 'first');
-
-                $('scp_display_card_labels_select').value = this.gamedatas.user_prefs.display_card_labels;
-                dojo.connect($('scp_display_card_labels_select'), 'change', (evt) => {
-                    this.ajaxcall("/scopa/scopa/setUserPref.html", {
-                        display_card_labels: $("scp_display_card_labels_select").value
-                    }, () => {});
-                    this.applyUserPrefs();
-                });
-
-                $('scp_card_deck_select').value = this.gamedatas.user_prefs.card_deck;
-                dojo.connect($('scp_card_deck_select'), 'change', (evt) => {
-                    this.ajaxcall("/scopa/scopa/setUserPref.html", {
-                        card_deck: $("scp_card_deck_select").value
-                    }, () => {});
-                    this.applyUserPrefs();
-                });
-                this.applyUserPrefs();
             },
 
 
@@ -195,12 +195,17 @@ define([
 
             // Displays a card in a given element
             renderCard: function(card, position) {
+                var deck_type = 'standard';
+                if ($('scp_card_deck_select').value == 'italian')
+                    deck_type = 'italian';
+
                 return dojo.place(
                     this.format_block(
                         'jstpl_card', {
                             card_id: card.id,
                             x: this.cardwidth * (parseInt(card.type_arg) - 1),
-                            y: this.cardheight * (parseInt(card.type) - 1)
+                            y: this.cardheight * (parseInt(card.type) - 1),
+                            deck_type: deck_type,
                         }
                     ),
                     position
@@ -370,7 +375,15 @@ define([
                     'card_label': text
                 }), card_div.id);
 
-
+                if ($('scp_card_deck_select').value == 'italian') {
+                    card_div.classList.add('scp_italian_deck');
+                    card_div.classList.remove('scp_standard_deck');
+                    this.ensureSpecificGameImageLoading(['cards_italian.jpg']);
+                } else {
+                    card_div.classList.add('scp_standard_deck');
+                    card_div.classList.remove('scp_italian_deck');
+                    this.ensureSpecificGameImageLoading(['cards_italian.jpg']);
+                }
             },
 
             // Apply user preferences

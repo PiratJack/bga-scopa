@@ -20,7 +20,9 @@ class scopa extends Table
         self::initGameStateLabels(
             [
                 'target_score' => 100,
-                'max_capture_cards' => 101, ]
+                'max_capture_cards' => 101,
+                'game_variant' => 102,
+                 ]
         );
 
         $this->target_score_mapping = [
@@ -175,8 +177,24 @@ class scopa extends Table
         return implode('<br />', $cards_display);
     }
 
+    // Gets and returns a random element in the list (used for Zombie)
+    public function getRandomElement($array)
+    {
+        $index_list = array_keys($array);
+        $rand_number = rand(0, count($index_list) - 1);
+
+        return $array[$index_list[$rand_number]];
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Notification functions
+    ////////////
+    // Note: some notifications are sent outside of the below ones
+
+
     // Sends counts of data in player's hands and deck
-    public function notif_cardsCount()
+    private function notif_cardsCount()
     {
         // Cards in each player's hand
         $sql = 'SELECT IF(card_location="deck","deck",card_location_arg) location, count(card_id)
@@ -206,7 +224,7 @@ class scopa extends Table
     }
 
     // Sends the cards that are in a player's hand
-    public function notif_cardsInHand($player_id = 0)
+    private function notif_cardsInHand($player_id = 0)
     {
         if (0 == $player_id) {
             $player_id = self::getCurrentPlayerId();
@@ -219,7 +237,7 @@ class scopa extends Table
     }
 
     // Sends the cards that are on the table
-    public function notif_cardsOnTable()
+    private function notif_cardsOnTable()
     {
         $cards = $this->cards->getCardsInLocation('table');
         self::notifyAllPlayers('cardsOnTable', 'Cards dealt to the table: <br />${cards_display}', ['cards' => $cards,
@@ -227,7 +245,7 @@ class scopa extends Table
     }
 
     // Updates player's scores
-    public function notif_playerScores()
+    private function notif_playerScores()
     {
         $sql = 'SELECT player_id, player_score FROM player';
         $data = self::getCollectionFromDb($sql, true);
@@ -235,7 +253,7 @@ class scopa extends Table
     }
 
     // A player wins: update score, statistics & send notification
-    public function playerWin($player_id, $win_type, &$scoring_table = null)
+    private function playerWin($player_id, $win_type, &$scoring_table = null)
     {
         $this->incStat(1, $win_type, $player_id);
         $this->DbQuery('UPDATE player SET player_score=player_score+1 WHERE player_id="'.$player_id.'"');
@@ -266,27 +284,89 @@ class scopa extends Table
 
         // Update scores
         $this->notif_playerScores();
+        self::notifyAllPlayers('pause', '', []);
+    }
+
+    // A player wins points for variants: update DB & notify, but no statistic
+    private function playerWinsVariantPoints($player_id, $win_type, $nb_points, &$scoring_table)
+    {
+        $this->DbQuery('UPDATE player SET player_score=player_score+'.$nb_points.' WHERE player_id="'.$player_id.'"');
+
+        $win_types = [
+            'il_ponino' => clienttranslate('${player_name} captured all knights and marks ${nb_points} points.'),
+        ];
+        self::notifyAllPlayers(
+            'message',
+            $win_types[$win_type],
+            [
+                'player_name' => self::getPlayerNameById($player_id),
+                'nb_points' => $nb_points,
+            ]
+        );
+
+        $scoring_table['variant'][$player_id] += $nb_points;
+        $scoring_table['added_points'][$player_id] += $nb_points;
+        $scoring_table['final_score'][$player_id] += $nb_points;
+
+        // Update scores
+        $this->notif_playerScores();
+        self::notifyAllPlayers('pause', '', []);
     }
 
     // There is a tie => notify everyone
-    public function playerTie($tie_type)
+    private function playerTie($tie_type)
     {
         // Ties are not possible for sette bello or scopa
         $tie_types = [
             'cards_captured' => clienttranslate('Multiple players captured the most cards. No point won!'),
             'coins_captured' => clienttranslate('Multiple players captured the most coins. No point won!'),
             'prime_score' => clienttranslate('Multiple players have the highest prime score. No point won!'),
+            'il_ponino' => clienttranslate('Noboty captured the 4 knights. No point won!'),
         ];
         self::notifyAllPlayers('message', $tie_types[$tie_type], []);
     }
 
-    // Gets and returns a random element in the list (used for Zombie)
-    public function getRandomElement($array)
+    // Display player score table
+    private function notif_finalScore($score_table, $scoring_rows)
     {
-        $index_list = array_keys($array);
-        $rand_number = rand(0, count($index_list) - 1);
+        // Format the scoring table
+        $score_table_display = [];
+        $players = self::loadPlayersBasicInfos();
+        ksort($players);
+        $nb_players = count($players);
 
-        return $array[$index_list[$rand_number]];
+        // First line: player names
+        $header = [''];
+        foreach ($players as $player_id => $player) {
+            $header[] = [
+                'str' => '${player_name}',
+                'args' => ['player_name' => $player['player_name']],
+                'type' => 'header',
+            ];
+        }
+        $score_table_display[] = $header;
+
+        // This is used to default all player's scores to 0 for each row (otherwise they're not displayed)
+        $player_to_zero = array_fill_keys(array_keys($players), 0);
+        foreach ($scoring_rows as $code => $label) {
+            $score = $score_table[$code];
+            ksort($score);
+            $score_table_display[] = [0 => $label] + $score + $player_to_zero;
+        }
+
+        // Finally, send notification
+        $this->notifyAllPlayers(
+            'tableWindow',
+            '',
+            [
+                'id' => 'finalScoring',
+                'title' => clienttranslate('Score'),
+                'table' => $score_table_display,
+                'closing' => clienttranslate('Close'),
+            ]
+        );
+
+        self::notifyAllPlayers('pause', '', []);
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -552,6 +632,8 @@ class scopa extends Table
             );
         }
 
+        $cards = $this->cards->getCardsInLocation('capture');
+
         // Scoring table initialization
         $score_table = [];
         $scoring_rows = [
@@ -561,6 +643,7 @@ class scopa extends Table
             'cards_captured' => clienttranslate('Cards captured'),
             'coins_captured' => clienttranslate('Coins captured'),
             'prime_score' => clienttranslate('Prime (primiera)'),
+            'variant' => '',
             'added_points' => clienttranslate('Points won this round'),
             'final_score' => clienttranslate('Final score'),
         ];
@@ -569,82 +652,26 @@ class scopa extends Table
             $score_table[$code] = array_fill_keys(array_keys($players), 0);
         }
 
-        // Scoring for Scopa
-        // Scopa score is from DB directly
-        $sql = 'SELECT player_id, player_score, scopa_in_round FROM player';
-        $values = self::getCollectionFromDb($sql);
-
-        // Scopa points have already been added to the score, so remove them
-        $score_table['previous_score'] = array_map(
-            function ($v) {
-                return $v['player_score'] - $v['scopa_in_round'];
-            },
-            $values
-        );
-        // Add scopa points to the score
-        $score_table['scopa_number'] = array_map(
-            function ($v) {
-                return $v['scopa_in_round'];
-            },
-            $values
-        );
-        $score_table['added_points'] = $score_table['scopa_number'];
-
-        // Scoring for Sette Bello
-        // Who has the 7 of coins (sette bello)?
-        $card = $this->cards->getCardsOfType(1, 7);
-        $sette_bello = array_pop($card);
-        if ('capture' != $sette_bello['location']) {
-            throw new BgaVisibleSystemException(self::_('Invalid state: 7 of coins in unexpected place'));
+        // For regular scopa, remove the "variant" row
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA) {
+            unset($scoring_rows['variant']);
+        } else {
+            $game_options = $this->getTableOptions();
+            $variant_id = $this->getGameStateValue('game_variant');
+            $scoring_rows['variant'] = $game_options[102]['values'][$variant_id]['name'];
         }
-        $this->playerWin($sette_bello['location_arg'], 'sette_bello', $score_table);
-        $score_table['sette_bello'][$sette_bello['location_arg']] = 1;
 
-        // Scoring for # cards, # coins and Prime
-        // Who captured the most cards?
-        $sql = 'SELECT IF(card_location="deck", "deck", card_location_arg) player, count(card_id) nb_cards
-                            FROM card
-                            WHERE card_location = "capture"
-                            GROUP BY card_location, player
-                            ORDER BY nb_cards DESC';
-        $score_table['cards_captured'] = self::getCollectionFromDb($sql, true);
+        // Scoring for regular Scopa game
+        $this->scoreScopa($cards, $score_table);
+        $this->scoreSetteBello($cards, $score_table);
+        $this->scoreCardsCaptured($cards, $score_table);
+        $this->scoreCoinsCaptured($cards, $score_table);
+        $this->scorePrime($cards, $score_table);
 
-        // Who has the most coin cards?
-        $sql = 'SELECT IF(card_location="deck", "deck", card_location_arg) player, count(card_id) nb_cards
-                            FROM card
-                            WHERE card_location = "capture" AND card_type = 1
-                            GROUP BY card_location, player
-                            ORDER BY nb_cards DESC';
-        $score_table['coins_captured'] = self::getCollectionFromDb($sql, true);
-
-        // Calculate Prime score
-        $players_prime = array_fill_keys(array_keys($this->loadPlayersBasicInfos()), ['1' => '', '2' => '', '3' => '', '4' => '']);
-        $point_per_card = $this->prime_points;
-        foreach ($players_prime as $player_id => $colors) {
-            $cards = $this->cards->getCardsInLocation('capture', $player_id);
-            foreach ($colors as $color_id => $temp) {
-                $cards_of_color = array_filter(
-                    $cards,
-                    function ($card) use ($color_id) {
-                        return $card['type'] == $color_id;
-                    }
-                );
-
-                $prime_points = array_map(
-                    function ($card) use ($point_per_card) {
-                        return $point_per_card[$card['type_arg']];
-                    },
-                    $cards_of_color
-                );
-                if (!empty($prime_points)) {
-                    $players_prime[$player_id][$color_id] = max($prime_points);
-                } else {
-                    $players_prime[$player_id][$color_id] = 0;
-                }
-            }
-            $players_prime[$player_id] = array_sum($players_prime[$player_id]);
+        // Score for variants (at least some)
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_IL_PONINO) {
+            $this->scoreIlPonino($cards, $score_table);
         }
-        $score_table['prime_score'] = $players_prime;
 
         // Get the winners in each category (except scopa & sette bello, already counted)
         $categories = ['cards_captured', 'coins_captured', 'prime_score'];
@@ -670,40 +697,7 @@ class scopa extends Table
         }
 
         // Format scoring table for display
-        // Format the scoring table
-        $score_table_display = [];
-        $players = self::loadPlayersBasicInfos();
-        ksort($players);
-        $nb_players = count($players);
-        // First line: player names
-        $header = [''];
-        foreach ($players as $player_id => $player) {
-            $header[] = [
-                'str' => '${player_name}',
-                'args' => ['player_name' => $player['player_name']],
-                'type' => 'header',
-            ];
-        }
-        $score_table_display[] = $header;
-        // This is used to default all player's scores to 0 for each row (otherwise they're not displayed)
-        $player_to_zero = array_fill_keys(array_keys($players), 0);
-        foreach ($scoring_rows as $code => $label) {
-            $score = $score_table[$code];
-            ksort($score);
-            $score_table_display[] = [0 => $label] + $score + $player_to_zero;
-        }
-        $this->notifyAllPlayers(
-            'tableWindow',
-            '',
-            [
-                'id' => 'finalScoring',
-                'title' => clienttranslate('Score'),
-                'table' => $score_table_display,
-                'closing' => clienttranslate('Close'),
-            ]
-        );
-
-        self::notifyAllPlayers('pause', '', []);
+        $this->notif_finalScore($score_table, $scoring_rows);
 
         // Should we go to next round or not?
         // Is the game over or not?
@@ -735,6 +729,129 @@ class scopa extends Table
             // We have a winner!
             $this->gamestate->nextState('gameEnd');
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Scoring functions
+    ////////////
+
+    // Scores scopa points (= who sweeped the table)
+    private function scoreScopa($cards, &$score_table)
+    {
+        // Scopa score is from DB directly
+        $sql = 'SELECT player_id, player_score, scopa_in_round FROM player';
+        $values = self::getCollectionFromDb($sql);
+
+        // Scopa points have already been added to the score, so remove them
+        $score_table['previous_score'] = array_map(
+            function ($v) {
+                return $v['player_score'] - $v['scopa_in_round'];
+            },
+            $values
+        );
+        // Add scopa points to the score
+        $score_table['scopa_number'] = array_map(
+            function ($v) {
+                return $v['scopa_in_round'];
+            },
+            $values
+        );
+        $score_table['added_points'] = $score_table['scopa_number'];
+    }
+
+    // Scores Sette bello points (= who has the 7 of coins)
+    private function scoreSetteBello($cards, &$score_table)
+    {
+        $card = array_filter($cards, function ($v) {
+            return $v['type'] == 1 && $v['type_arg'] == 7;
+        });
+        $sette_bello = array_pop($card);
+        if ('capture' != $sette_bello['location']) {
+            throw new BgaVisibleSystemException(self::_('Invalid state: 7 of coins in unexpected place'));
+        }
+        $this->playerWin($sette_bello['location_arg'], 'sette_bello', $score_table);
+        $score_table['sette_bello'][$sette_bello['location_arg']] = 1;
+    }
+
+    // Scores Cards captures (= most cards captured)
+    private function scoreCardsCaptured($cards, &$score_table)
+    {
+        $cardsCaptured = array_fill_keys(array_unique(array_map(function ($v) {
+            return $v['location_arg'];
+        }, $cards)), 0);
+        foreach ($cardsCaptured as $player_id => $temp) {
+            $cardsCaptured[$player_id] = count(array_filter($cards, function ($v) use ($player_id) {
+                return $v['location_arg'] == $player_id;
+            }));
+        }
+
+        $score_table['cards_captured'] = $cardsCaptured;
+    }
+
+    // Scores Coinds captures (= most coins captured)
+    private function scoreCoinsCaptured($cards, &$score_table)
+    {
+        $coinsCaptured = array_fill_keys(array_unique(array_map(function ($v) {
+            return $v['location_arg'];
+        }, $cards)), 0);
+        foreach ($coinsCaptured as $player_id => $temp) {
+            $coinsCaptured[$player_id] = count(array_filter($cards, function ($v) use ($player_id) {
+                return $v['location_arg'] == $player_id && $v['type'] == 1;
+            }));
+        }
+
+        $score_table['coins_captured'] = $coinsCaptured;
+    }
+
+    // Scores Prime points (= complex calculation)
+    private function scorePrime($cards, &$score_table)
+    {
+        $players_prime = array_fill_keys(array_keys($this->loadPlayersBasicInfos()), ['1' => '', '2' => '', '3' => '', '4' => '']);
+        $point_per_card = $this->prime_points;
+        foreach ($players_prime as $player_id => $colors) {
+            $playerCards = array_filter($cards, function ($v) use ($player_id) {
+                return $v['location_arg'] == $player_id;
+            });
+            foreach ($colors as $color_id => $temp) {
+                $cards_of_color = array_filter(
+                    $playerCards,
+                    function ($card) use ($color_id) {
+                        return $card['type'] == $color_id;
+                    }
+                );
+
+                $prime_points = array_map(
+                    function ($card) use ($point_per_card) {
+                        return $point_per_card[$card['type_arg']];
+                    },
+                    $cards_of_color
+                );
+                if (!empty($prime_points)) {
+                    $players_prime[$player_id][$color_id] = max($prime_points);
+                } else {
+                    $players_prime[$player_id][$color_id] = 0;
+                }
+            }
+            $players_prime[$player_id] = array_sum($players_prime[$player_id]);
+        }
+        $score_table['prime_score'] = $players_prime;
+    }
+
+    // Scores Il ponino points (= doubles Scopa points if captured all knights)
+    private function scoreIlPonino($cards, &$score_table)
+    {
+        $knights = array_filter($cards, function ($v) {
+            return $v['type_arg'] == 9;
+        });
+        $playerWithAll = array_pop($knights)['location_arg'];
+        foreach ($knights as $knight) {
+            if ($knight['location_arg'] != $playerWithAll) {
+                $this->playerTie('il_ponino');
+                return;
+            }
+        }
+
+        $this->playerWinsVariantPoints($playerWithAll, 'il_ponino', $score_table['scopa_number'][$playerWithAll], $score_table);
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -797,7 +914,7 @@ class scopa extends Table
 
     public function upgradeTableDb($from_version)
     {
-        if ($from_version < 2110081254) {
+        if ($from_version <= 2110081254) {
             $sql = 'ALTER TABLE DBPREFIX_player ADD `card_deck` VARCHAR(20) NOT NULL DEFAULT "italian",
                      ADD `display_card_labels` BOOLEAN NOT NULL DEFAULT 1';
 

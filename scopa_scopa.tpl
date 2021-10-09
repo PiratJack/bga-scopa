@@ -56,11 +56,9 @@
 
 
 <script type="text/javascript">
-    var jstpl_card = '<div class="scp_card" style="background-position:-${x}px -${y}px" id="card_${card_id}" data-card="${card_id}"></div>';
+    var jstpl_card = '<div class="scp_card scp_${deck_type}_deck" style="background-position:-${x}px -${y}px" id="card_${card_id}" data-card="${card_id}"></div>';
 
     var jstpl_capturegroup = '<div class="scp_capturegroup" id="capturegroup_${id}" data-cards="${cards_ids}"></div>';
-
-    var jstpl_capturechoice = '<div id="capturechoice_{option}"></div>';
 
     var jstpl_player_board = '<div class="scp_deck" id="cp_board_${player_id}">${card_count}</div>';
 

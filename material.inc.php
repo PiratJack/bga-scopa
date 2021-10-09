@@ -8,6 +8,9 @@
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  */
+
+require_once("modules/constants.inc.php");
+
 $this->colors = [
     1 => ['name' => clienttranslate('coin')],
     2 => ['name' => clienttranslate('cup')],
