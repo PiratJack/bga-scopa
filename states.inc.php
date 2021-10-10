@@ -13,6 +13,7 @@ if (!defined('STATE_DEAL_START')) {
     define('STATE_HAND_START', 30);
     define('STATE_PLAYER_TURN', 40);
     define('STATE_NEXT_PLAYER', 50);
+    define('STATE_AUTO_PLAYER', 55);
     define('STATE_HAND_END', 60);
     define('STATE_DECK_END', 70);
 }
@@ -65,8 +66,19 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stNextPlayer',
         'updateGameProgression' => true,
-        'possibleactions' => ['playerTurn', 'handEnd'],
-        'transitions' => ['playerTurn' => STATE_PLAYER_TURN, 'handEnd' => STATE_HAND_END],
+        'possibleactions' => ['playerTurn', 'autoPlayerTurn', 'handEnd'],
+        'transitions' => ['playerTurn' => STATE_PLAYER_TURN, 'autoPlayerTurn' => STATE_AUTO_PLAYER, 'handEnd' => STATE_HAND_END],
+    ],
+
+    // Switch to next player
+    STATE_AUTO_PLAYER => [
+        'name' => 'autoPlayer',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stAutoPlayer',
+        'updateGameProgression' => true,
+        'possibleactions' => ['playerTurn', 'playCard'],
+        'transitions' => ['playerTurn' => STATE_PLAYER_TURN, 'playCard' => STATE_NEXT_PLAYER],
     ],
 
     // No card left in hand: deal new cards if there are cards in the deck

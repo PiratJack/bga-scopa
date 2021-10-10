@@ -46,28 +46,20 @@ class action_scopa extends APP_GameAction
     {
         self::setAjaxMode();
 
-        $preferences = [
-            'display_card_labels'=> AT_posint,
-            'card_deck'=> AT_alphanum,
-            ];
-
         // Retrieve arguments
-        $user_preferences = [];
-        foreach ($preferences as $pref_id => $format) {
-            $val = self::getArg($pref_id, $format);
-            if ($val != '') {
-                $user_preferences[$pref_id] = $val;
-            }
+        $pref_id = self::getArg('pref_id', AT_posint);
+        $pref_value = self::getArg('pref_value', AT_posint);
+
+        // Check the value is correct
+        switch ($pref_id) {
+            case SCP_PREF_AUTO_PLAY:
+                if (!in_array($pref_value, [SCP_PREF_AUTO_PLAY_YES,SCP_PREF_AUTO_PLAY_NO])) {
+                    throw new BgaUserException('Wrong value for user preference '.$pref_id);
+                }
+            break;
         }
 
-        // Filter values for card deck
-        if (array_key_exists('card_deck', $user_preferences)) {
-            if (!in_array($user_preferences['card_deck'], ['standard', 'italian'])) {
-                $user_preferences['card_deck'] = 'italian';
-            }
-        }
-
-        $this->game->setUserPref($user_preferences);
+        $this->game->setUserPref($pref_id, $pref_value);
 
         self::ajaxResponse();
     }

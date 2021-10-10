@@ -108,6 +108,11 @@
     position: relative;
     width: 68px;
     height: 111px;
+}
+
+.scp_card,
+.scp_deck,
+.stockitem {
     border-radius: 10px;
     box-shadow: 3px 3px 3px #000000a0;
 }
@@ -174,14 +179,6 @@
 .scp_hidden {
     display: none;
 }
-
-.stockitem {
-    background-size: 1000%;
-    border-radius: 10px;
-    box-shadow: 3px 3px 3px #000000a0;
-}
-
-
 
 
 @media only screen and (min-width: 1720px) {

@@ -18,7 +18,13 @@ CREATE TABLE IF NOT EXISTS `card` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 
+CREATE TABLE IF NOT EXISTS `user_preferences` (
+  `player_id` int(10) NOT NULL,
+  `pref_id` int(10) NOT NULL,
+  `pref_value` int(10) NOT NULL,
+  PRIMARY KEY (`player_id`, `pref_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 ALTER TABLE `player` ADD `has_last_captured` BOOLEAN NOT NULL,
-                     ADD `card_deck` VARCHAR(20) NOT NULL DEFAULT 'italian',
-                     ADD `display_card_labels` BOOLEAN NOT NULL DEFAULT 1,
                      ADD `scopa_in_round` INT NOT NULL;

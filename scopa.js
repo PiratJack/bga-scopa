@@ -31,6 +31,8 @@ define([
                 }
                 this.dontPreloadImage('cards_standard.jpg');
                 this.dontPreloadImage('cards_italian.jpg');
+
+                this.deckCardClasses = ['scp_standard_deck', 'scp_italian_deck'];
             },
 
             // Initial setup
@@ -50,86 +52,50 @@ define([
                 $('deckcard').innerHTML = gamedatas.players_hand.deck;
 
 
-                // User preferences
-                dojo.place(this.format_block('jstpl_userDisplayPrefs', {
-                    display_card_labels: _('Display labels on cards?'),
-                    no: _('No'),
-                    yes: _('Yes'),
-
-                    card_deck: _('Card deck'),
-                    italian: _('Italian'),
-                    standard: _('Standard'),
-                }), 'player_boards', 'first');
-
-                $('scp_display_card_labels_select').value = this.gamedatas.user_prefs.display_card_labels;
-                dojo.connect($('scp_display_card_labels_select'), 'change', (evt) => {
-                    this.ajaxcall("/scopa/scopa/setUserPref.html", {
-                        display_card_labels: $("scp_display_card_labels_select").value
-                    }, () => {});
-                    this.applyUserPrefs();
-                });
-
-                $('scp_card_deck_select').value = this.gamedatas.user_prefs.card_deck;
-                dojo.connect($('scp_card_deck_select'), 'change', (evt) => {
-                    this.ajaxcall("/scopa/scopa/setUserPref.html", {
-                        card_deck: $("scp_card_deck_select").value
-                    }, () => {});
-                    this.applyUserPrefs();
-                });
-                this.applyUserPrefs();
-
-
-                /************* Setup Player's hand ****************/
-
-                // Setup card manipulator
+                /************* Setup Stock for Player & Table hands ****************/
                 this.playerCards = new ebg.stock();
-                this.playerCards.item_margin = 10;
-                this.playerCards.onItemCreate = dojo.hitch(this, 'setupNewCard');
-                this.playerCards.create(this, $('myhandcards'), this.cardwidth, this.cardheight);
-                this.playerCards.autowidth = true;
-                // Do not allow any selection now. It'll be done by playerTurn state
-                this.playerCards.setSelectionMode(0);
+                this.tableCards = new ebg.stock();
 
-                // Setup images
-                this.playerCards.image_items_per_row = 10;
-                for (var color = 1; color <= 4; color++) {
-                    for (var value = 1; value <= 10; value++) {
-                        // Build card type id
-                        var cardFaceId = this.getCardFacePosition(color, value);
-                        this.playerCards.addItemType(cardFaceId, cardFaceId, g_gamethemeurl + 'img/cards_italian.jpg', cardFaceId);
+                var stockHands = [this.playerCards, this.tableCards];
+
+                for (i in stockHands) {
+                    var stockHand = stockHands[i];
+
+                    stockHand.item_margin = 10;
+                    stockHand.onItemCreate = dojo.hitch(this, 'setupNewCard');
+                    stockHand.autowidth = true;
+                    // Do not allow any selection now, even for player. It'll be done by playerTurn state
+                    stockHand.setSelectionMode(0);
+
+                    // Card images
+                    stockHand.image_items_per_row = 10;
+                    for (var color = 1; color <= 4; color++) {
+                        for (var value = 1; value <= 10; value++) {
+                            // Build card type id
+                            var cardFaceId = this.getCardFacePosition(color, value);
+                            stockHand.addItemType(cardFaceId, cardFaceId, '', cardFaceId);
+                        }
                     }
                 }
 
+                // Final setup of Player hand
+                // Setup card UI location
+                this.playerCards.create(this, $('myhandcards'), this.cardwidth, this.cardheight);
                 // Hand contents
                 this.updateCardsInHand(gamedatas.hand);
-
+                // Allow to play!
                 dojo.connect(this.playerCards, 'onChangeSelection', this, 'onSelectCard');
 
-                /************* Setup Table's "hand" ****************/
-
-                // Setup card manipulator
-                this.tableCards = new ebg.stock();
-                this.tableCards.item_margin = 10;
-                this.tableCards.onItemCreate = dojo.hitch(this, 'setupNewCard');
+                // Final setup of Table hand
+                // Setup card UI location
                 this.tableCards.create(this, $('tablehandcards'), this.cardwidth, this.cardheight);
-                this.tableCards.autowidth = true;
-                // No card allowed to be selected
-                this.tableCards.setSelectionMode(0);
-
-                // Card images
-                this.tableCards.image_items_per_row = 10;
-                for (var color = 1; color <= 4; color++) {
-                    for (var value = 1; value <= 10; value++) {
-                        // Build card type id
-                        var cardFaceId = this.getCardFacePosition(color, value);
-                        this.tableCards.addItemType(cardFaceId, cardFaceId, g_gamethemeurl + 'img/cards_italian.jpg', cardFaceId);
-                    }
-                }
-
                 // Table contents
                 this.updateCardsOnTable(gamedatas.table);
 
                 /************* Misc ****************/
+
+                // User preferences
+                this.setupUserPreferences();
 
                 // Setup game notifications to handle
                 this.setupNotifications();
@@ -193,24 +159,103 @@ define([
                 }
             },
 
+            ///////////////////////////////////////////////////
+            //// Card display & manipulation
+
+            // Display cards from Stock properly (with card name, user prefs, ...)
+            setupNewCard: function(card_div, card_type_id, card_id) {
+                var card = this.getCardColorAndValue(card_type_id);
+                var text = dojo.string.substitute(_("${value} of ${suit}"), {
+                    'value': this.gamedatas.values_label[card.value],
+                    'suit': this.gamedatas.colors[card.color].name,
+                });
+
+                var tooltipHideClass = dojo.query("#preference_control_100")[0].value == "2" ? 'scp_hidden' : '';
+                dojo.place(this.format_block('jstpl_card_label', {
+                    'card_label': text,
+                    added_classes: tooltipHideClass
+                }), card_div.id);
+
+                // Apply user display preferences
+                dojo.query(card_div).addClass(this.getCardDeckClass());
+            },
+
             // Displays a card in a given element
             renderCard: function(card, position) {
-                var deck_type = 'standard';
-                if ($('scp_card_deck_select').value == 'italian')
-                    deck_type = 'italian';
-
                 return dojo.place(
                     this.format_block(
                         'jstpl_card', {
                             card_id: card.id,
                             x: this.cardwidth * (parseInt(card.type_arg) - 1),
                             y: this.cardheight * (parseInt(card.type) - 1),
-                            deck_type: deck_type,
+                            deck_class: this.getCardDeckClass(),
                         }
                     ),
                     position
                 );
             },
+
+            // Formats some data about the card
+            getCardFromNotif: function(args) {
+                return {
+                    id: args.card_id,
+                    type: args.color,
+                    type_arg: args.value,
+                    face_id: this.getCardFacePosition(args.color, args.value)
+                }
+            },
+
+            // Displays card movements (from hand to "card played", then with table cards)
+            playCard: function(card, playerId, captures) {
+                var animations = [];
+
+                // Define where the card is initially
+                // this.player_id == playerId is meant for auto-play
+                if (this.isCurrentPlayerActive() || this.player_id == playerId)
+                    var source = 'myhandcards';
+                else
+                    var source = 'overall_player_board_' + playerId;
+
+                var cardPlayed = this.renderCard(card, source);
+                var cardCreate = this.slideToObject(cardPlayed, 'cardplayedcard', 750);
+
+                if (this.isCurrentPlayerActive() || this.player_id == playerId)
+                    dojo.connect(cardCreate, 'onBegin', () => this.playerCards.removeFromStockById(card.id));
+
+                animations.push(cardCreate);
+
+
+                // Card played towards table
+                if (captures == undefined) {
+                    var cardToTable = this.slideToObject(cardPlayed, 'tablehandcards', 750);
+                    dojo.connect(cardToTable, 'onEnd', (node) => {
+                        dojo.destroy(node);
+                        this.tableCards.addToStockWithId(card.face_id, card.id);
+                    });
+                    animations.push(cardToTable);
+                }
+                // Card captures
+                else {
+                    // Remove cards from table
+                    for (i in captures) {
+                        var cardCaptured = captures[i];
+                        var cardCapturedDiv = this.renderCard(cardCaptured, 'tablehandcards_item_' + cardCaptured.id);
+                        var cardCapturedAnim = this.slideToObject(cardCapturedDiv, 'cardplayedcard', 750);
+                        dojo.connect(cardCapturedAnim, 'onEnd', dojo.destroy);
+                        dojo.connect(cardCapturedAnim, 'beforeBegin', (node) => this.tableCards.removeFromStockById(node.dataset.card));
+                        animations.push(cardCapturedAnim);
+                    }
+
+                    // Card collected by player
+                    var cardCapture = this.slideToObject(cardPlayed, source, 750);
+                    dojo.connect(cardCapture, 'onEnd', dojo.destroy);
+                    animations.push(cardCapture);
+                }
+                dojo.fx.chain(animations).play();
+            },
+
+            ///////////////////////////////////////////////////
+            //// Capture zone handling
 
             // Renders & displays the block to select a capture option
             displayCaptureOptions: function(captures) {
@@ -276,63 +321,8 @@ define([
                 dojo.query('.scp_canCapture').removeClass('scp_canCapture');
             },
 
-            // Formats some data about the card
-            getCardFromNotif: function(args) {
-                return {
-                    id: args.card_id,
-                    type: args.color,
-                    type_arg: args.value,
-                    face_id: this.getCardFacePosition(args.color, args.value)
-                }
-            },
-
-            // Displays card movements (from hand to "card played", then with table cards)
-            playCard: function(card, playerId, captures) {
-                var animations = [];
-
-                // Define where the card is initially
-                if (this.isCurrentPlayerActive())
-                    var source = 'myhandcards';
-                else
-                    var source = 'overall_player_board_' + playerId;
-
-                var cardPlayed = this.renderCard(card, source);
-                var cardCreate = this.slideToObject(cardPlayed, 'cardplayedcard', 750);
-
-                if (this.isCurrentPlayerActive())
-                    dojo.connect(cardCreate, 'onBegin', () => this.playerCards.removeFromStockById(card.id));
-
-                animations.push(cardCreate);
-
-
-                // Card played towards table
-                if (captures == undefined) {
-                    var cardToTable = this.slideToObject(cardPlayed, 'tablehandcards', 750);
-                    dojo.connect(cardToTable, 'onEnd', (node) => {
-                        dojo.destroy(node);
-                        this.tableCards.addToStockWithId(card.face_id, card.id);
-                    });
-                    animations.push(cardToTable);
-                }
-                // Card captures
-                else {
-                    // Remove cards from table
-                    for (i in captures) {
-                        var cardCaptured = captures[i];
-                        var cardCapturedDiv = this.renderCard(cardCaptured, 'tablehandcards_item_' + cardCaptured.id);
-                        var cardCapturedAnim = this.slideToObject(cardCapturedDiv, 'cardplayedcard', 750);
-                        dojo.connect(cardCapturedAnim, 'onEnd', dojo.destroy);
-                        dojo.connect(cardCapturedAnim, 'beforeBegin', (node) => this.tableCards.removeFromStockById(node.dataset.card));
-                        animations.push(cardCapturedAnim);
-                    }
-
-                    // Card collected by player
-                    var cardCapture = this.slideToObject(cardPlayed, source, 750);
-                    dojo.connect(cardCapture, 'onEnd', dojo.destroy);
-                    animations.push(cardCapture);
-                }
-                dojo.fx.chain(animations).play();
-            },
+            ///////////////////////////////////////////////////
+            //// Update UI from notifications
 
             // Update card counts
             updateCardsCount: function(counts) {
@@ -361,55 +351,6 @@ define([
                     var value = card.type_arg;
                     this.tableCards.addToStockWithId(this.getCardFacePosition(color, value), card.id);
                 }
-            },
-
-            // Displays tooltip on cards
-            setupNewCard: function(card_div, card_type_id, card_id) {
-                var card = this.getCardColorAndValue(card_type_id);
-                var text = dojo.string.substitute(_("${value} of ${suit}"), {
-                    'value': this.gamedatas.values_label[card.value],
-                    'suit': this.gamedatas.colors[card.color].name,
-                });
-
-                dojo.place(this.format_block('jstpl_card_label', {
-                    'card_label': text
-                }), card_div.id);
-
-                if ($('scp_card_deck_select').value == 'italian') {
-                    card_div.classList.add('scp_italian_deck');
-                    card_div.classList.remove('scp_standard_deck');
-                    this.ensureSpecificGameImageLoading(['cards_italian.jpg']);
-                } else {
-                    card_div.classList.add('scp_standard_deck');
-                    card_div.classList.remove('scp_italian_deck');
-                    this.ensureSpecificGameImageLoading(['cards_italian.jpg']);
-                }
-            },
-
-            // Apply user preferences
-            applyUserPrefs: function() {
-                // Display of card's face values
-                if ($('scp_display_card_labels_select').value == '0') {
-                    dojo.query('.scp_card_label').addClass('scp_hidden')
-                } else {
-                    dojo.query('.scp_card_label').removeClass('scp_hidden')
-                }
-
-                // Card deck
-                if ($('scp_card_deck_select').value == 'italian') {
-                    dojo.query('.scp_card').addClass('scp_italian_deck');
-                    dojo.query('.scp_card').removeClass('scp_standard_deck');
-                    dojo.query('.stockitem').addClass('scp_italian_deck');
-                    dojo.query('.stockitem').removeClass('scp_standard_deck');
-                    this.ensureSpecificGameImageLoading(['cards_italian.jpg']);
-                } else {
-                    dojo.query('.scp_card').addClass('scp_standard_deck');
-                    dojo.query('.scp_card').removeClass('scp_italian_deck');
-                    dojo.query('.stockitem').addClass('scp_standard_deck');
-                    dojo.query('.stockitem').removeClass('scp_italian_deck');
-                    this.ensureSpecificGameImageLoading(['cards_standard.jpg']);
-                }
-
             },
 
             ///////////////////////////////////////////////////
@@ -482,6 +423,111 @@ define([
 
 
             ///////////////////////////////////////////////////
+            //// User preferences
+
+            // Defines handlers when user changes values
+            setupUserPreferences: function() {
+                // Extract the ID and value from the UI control
+                var _this = this;
+
+                function onchange(e) {
+                    var match = e.target.id.match(/^preference_[cf]ontrol_(\d+)$/);
+                    if (!match) {
+                        return;
+                    }
+                    var prefId = +match[1];
+                    var prefValue = +e.target.value;
+                    _this.prefs[prefId].value = prefValue;
+                    _this.onPreferenceChange(prefId, prefValue);
+                }
+
+                // Call onPreferenceChange() when any value changes
+                dojo.query(".preference_control").connect("onchange", onchange);
+
+                // Call onPreferenceChange() now to initialize the setup
+                dojo.forEach(
+                    dojo.query("#ingame_menu_content .preference_control"),
+                    function(el) {
+                        onchange({
+                            target: el
+                        });
+                    }
+                );
+            },
+
+            onPreferenceChange: function(prefId, prefValue) {
+                // Preferences that change display
+                switch (prefId) {
+                    // Display labels on cards?
+                    case 100:
+                        // Yes, display them
+                        if (prefValue == 1)
+                            dojo.query('.scp_card_label').removeClass('scp_hidden')
+                        // No, hide them
+                        else
+                            dojo.query('.scp_card_label').addClass('scp_hidden')
+                        break;
+
+                        // Card deck theme
+                    case 101:
+                        // Remove all existing classes
+                        for (i in this.deckCardClasses) {
+                            var deckCardClass = this.deckCardClasses[i];
+                            dojo.query('.' + deckCardClass).removeClass(deckCardClass);
+                        }
+                        // Add the new ones
+                        dojo.query('.scp_card').addClass(this.getCardDeckClass());
+                        dojo.query('.stockitem').addClass(this.getCardDeckClass());
+
+                        /* The below should work, but it doesn't. So I use classes instead
+                        var stockHands = [this.playerCards, this.tableCards];
+                        var imagePath = this.getCardDeckType();
+                        for (var i in stockHands) {
+                            var stockHand = stockHands[i];
+                            for (var c in stockHand.item_type) {
+                                stockHand.item_type[c].image = imagePath;
+                            }
+
+                            stockHand.updateDisplay();
+                        }*/
+                        break;
+                }
+
+                // Preferences that need to be sent to server (only if read-write)
+                if (!(this.isSpectator || g_archive_mode)) {
+                    if ([102].includes(prefId)) {
+                        this.ajaxcall("/scopa/scopa/setUserPref.html", {
+                            pref_id: prefId,
+                            pref_value: prefValue,
+                        }, () => {});
+                    }
+                }
+            },
+
+            /*getCardDeckType: function() {
+                var val = $('preference_control_101').value;
+                if (val=== "1") {
+                    return g_gamethemeurl + 'img/cards_italian.jpg';
+                } else if (val ==="2") {
+                    return g_gamethemeurl + 'img/cards_standard.jpg';
+                } else {
+
+                }
+            },*/
+
+            getCardDeckClass: function() {
+                var val = $('preference_control_101').value;
+                if (val === "1") {
+                    return 'scp_italian_deck';
+                } else if (val === "2") {
+                    return 'scp_standard_deck';
+                } else {
+                    return 'scp_italian_deck';
+                }
+            },
+
+
+            ///////////////////////////////////////////////////
             //// Reaction to cometD notifications
 
             // Notification setup
@@ -502,9 +548,6 @@ define([
 
                 dojo.subscribe('playerCapturesTable', this, 'notif_playerCapturesTable');
                 this.notifqueue.setSynchronous('playerCapturesTable', 2000);
-
-                dojo.subscribe('pause', this, 'notif_pause');
-                this.notifqueue.setSynchronous('pause', 2000);
             },
 
             // A player played a card towards the table
@@ -551,10 +594,5 @@ define([
                     this.scoreCtrl[playerId].toValue(newScore);
                 }
             },
-
-            // Does nothing - useful to delay things
-            notif_pause: function(notif) {
-                return;
-            }
         });
     });

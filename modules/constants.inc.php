@@ -10,6 +10,17 @@
  */
 
 if (!defined('SCP_VARIANT_SCOPA')) {
+    define('SCP_OPTION_POINTS_TO_WIN', 100);
+    define('SCP_OPTION_POINTS_TO_WIN_11', 1);
+    define('SCP_OPTION_POINTS_TO_WIN_16', 2);
+    define('SCP_OPTION_POINTS_TO_WIN_21', 3);
+    define('SCP_OPTION_POINTS_TO_WIN_31', 4);
+
+    define('SCP_OPTION_MAX_CAPTURE', 101);
+    define('SCP_OPTION_MAX_CAPTURE_2', 1);
+    define('SCP_OPTION_MAX_CAPTURE_ANY', 2);
+
+    define('SCP_VARIANT', 102);
     define('SCP_VARIANT_SCOPA', 0);
     define('SCP_VARIANT_IL_PONINO', 1);
     define('SCP_VARIANT_NAPOLA', 2);
@@ -21,4 +32,16 @@ if (!defined('SCP_VARIANT_SCOPA')) {
     define('SCP_VARIANT_RE_BELLO', 8);
     define('SCP_VARIANT_SCOPA_A_PERDERE', 9);
     define('SCP_VARIANT_SCOPA_FRAC', 10);
+
+    define('SCP_PREF_DISPLAY_LABELS', 100);
+    define('SCP_PREF_DISPLAY_LABELS_YES', 1);
+    define('SCP_PREF_DISPLAY_LABELS_NO', 2);
+
+    define('SCP_PREF_CARD_DECK', 101);
+    define('SCP_PREF_CARD_DECK_ITALIAN', 1);
+    define('SCP_PREF_CARD_DECK_STANDARD', 2);
+
+    define('SCP_PREF_AUTO_PLAY', 102);
+    define('SCP_PREF_AUTO_PLAY_YES', 1);
+    define('SCP_PREF_AUTO_PLAY_NO', 2);
 }

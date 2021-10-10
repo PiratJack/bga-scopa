@@ -56,30 +56,13 @@
 
 
 <script type="text/javascript">
-    var jstpl_card = '<div class="scp_card scp_${deck_type}_deck" style="background-position:-${x}px -${y}px" id="card_${card_id}" data-card="${card_id}"></div>';
+    var jstpl_card = '<div class="scp_card ${deck_class}" style="background-position:-${x}px -${y}px" id="card_${card_id}" data-card="${card_id}"></div>';
 
     var jstpl_capturegroup = '<div class="scp_capturegroup" id="capturegroup_${id}" data-cards="${cards_ids}"></div>';
 
     var jstpl_player_board = '<div class="scp_deck" id="cp_board_${player_id}">${card_count}</div>';
 
-    var jstpl_card_label = '<div class="scp_card_label">${card_label}</div>';
-
-    var jstpl_userDisplayPrefs = `<div class="player-board">
-        <div id="scp_display_card_labels">
-            \${display_card_labels}<br />
-            <select id="scp_display_card_labels_select">
-              <option value='1'>\${yes}</option>
-              <option value='0'>\${no}</option>
-            </select>
-        </div>
-        <div id="scp_card_deck">
-            \${card_deck}<br />
-            <select id="scp_card_deck_select">
-              <option value='italian'>\${italian}</option>
-              <option value='standard'>\${standard}</option>
-            </select>
-        </div>
-    </div>`;
+    var jstpl_card_label = '<div class="scp_card_label ${added_classes}">${card_label}</div>';
 </script>
 
 

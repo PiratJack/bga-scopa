@@ -14,25 +14,25 @@ require_once("modules/constants.inc.php");
 
 
 $game_options = [
-    100 => [
+    SCP_OPTION_POINTS_TO_WIN => [
         'name' => totranslate('Points to win'),
         'values' => [
-            1 => ['name' => totranslate('11 points'), 'tmdisplay' => totranslate('11 points to win')],
-            2 => ['name' => totranslate('16 points'), 'tmdisplay' => totranslate('16 points to win')],
-            3 => ['name' => totranslate('21 points'), 'tmdisplay' => totranslate('21 points to win')],
-            4 => ['name' => totranslate('31 points'), 'tmdisplay' => totranslate('31 points to win')],
+            SCP_OPTION_POINTS_TO_WIN_11 => ['name' => totranslate('11 points'), 'tmdisplay' => totranslate('11 points to win')],
+            SCP_OPTION_POINTS_TO_WIN_16 => ['name' => totranslate('16 points'), 'tmdisplay' => totranslate('16 points to win')],
+            SCP_OPTION_POINTS_TO_WIN_21 => ['name' => totranslate('21 points'), 'tmdisplay' => totranslate('21 points to win')],
+            SCP_OPTION_POINTS_TO_WIN_31 => ['name' => totranslate('31 points'), 'tmdisplay' => totranslate('31 points to win')],
         ],
-        'default' => 1,
+        'default' => SCP_OPTION_POINTS_TO_WIN_11,
     ],
-    101 => [
+    SCP_OPTION_MAX_CAPTURE => [
         'name' => totranslate('Max number of cards captured'),
         'values' => [
-            1 => ['name' => totranslate('2 cards'), 'tmdisplay' => 'Max of 2 cards captured'],
-            2 => ['name' => totranslate('No limit'), 'tmdisplay' => 'No limit on capture'],
+            SCP_OPTION_MAX_CAPTURE_2 => ['name' => totranslate('2 cards'), 'tmdisplay' => 'Max of 2 cards captured'],
+            SCP_OPTION_MAX_CAPTURE_ANY => ['name' => totranslate('No limit'), 'tmdisplay' => 'No limit on capture'],
         ],
-        'default' => 2,
+        'default' => SCP_OPTION_MAX_CAPTURE_ANY,
     ],
-    102 => [
+    SCP_VARIANT => [
         'name' => totranslate('Variant'),
         'values' => [
             SCP_VARIANT_SCOPA => [
@@ -49,3 +49,34 @@ $game_options = [
         'default' => SCP_VARIANT_SCOPA,
     ],
 ];
+
+
+$game_preferences = array(
+    SCP_PREF_DISPLAY_LABELS => array(
+        'name' => totranslate('Display labels on cards?'),
+        'needReload' => false, // Handled through JS directly
+        'values' => array(
+            SCP_PREF_DISPLAY_LABELS_YES => array( 'name' => totranslate('Yes') ),
+            SCP_PREF_DISPLAY_LABELS_NO => array( 'name' => totranslate('No') )
+        ),
+        'default' => SCP_PREF_DISPLAY_LABELS_YES
+    ),
+    SCP_PREF_CARD_DECK => array(
+        'name' => totranslate('Card deck'),
+        'needReload' => false, // Handled through JS directly
+        'values' => array(
+            SCP_PREF_CARD_DECK_ITALIAN => array( 'name' => totranslate('Italian') ),
+            SCP_PREF_CARD_DECK_STANDARD => array( 'name' => totranslate('Standard') )
+        ),
+        'default' => SCP_PREF_CARD_DECK_ITALIAN
+    ),
+    SCP_PREF_AUTO_PLAY => array(
+        'name' => totranslate('Auto-play last card?'),
+        'needReload' => false, // Doesn't generate any display change
+        'values' => array(
+            SCP_PREF_AUTO_PLAY_YES => array( 'name' => totranslate('Yes') ),
+            SCP_PREF_AUTO_PLAY_NO => array( 'name' => totranslate('No') )
+        ),
+        'default' => SCP_PREF_AUTO_PLAY_NO
+    ),
+);

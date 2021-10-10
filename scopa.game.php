@@ -19,17 +19,17 @@ class scopa extends Table
 
         self::initGameStateLabels(
             [
-                'target_score' => 100,
-                'max_capture_cards' => 101,
-                'game_variant' => 102,
+                'target_score' => SCP_OPTION_POINTS_TO_WIN,
+                'max_capture_cards' => SCP_OPTION_MAX_CAPTURE,
+                'game_variant' => SCP_VARIANT,
                  ]
         );
 
         $this->target_score_mapping = [
-            1 => 11,
-            2 => 16,
-            3 => 21,
-            4 => 31,
+            SCP_OPTION_POINTS_TO_WIN_11 => 11,
+            SCP_OPTION_POINTS_TO_WIN_16 => 16,
+            SCP_OPTION_POINTS_TO_WIN_21 => 21,
+            SCP_OPTION_POINTS_TO_WIN_31 => 31,
         ];
 
         $this->cards = self::getNew('module.common.deck');
@@ -67,7 +67,7 @@ class scopa extends Table
         $this->combineCards($combinations, $table);
 
         // Depending on option, reduce combinations to 2 cards max
-        if ('1' == $this->getGameStateValue('max_capture_cards')) {
+        if (SCP_OPTION_MAX_CAPTURE_2 == $this->getGameStateValue('max_capture_cards')) {
             $combinations = array_filter(
                 $combinations,
                 function ($value) {
@@ -186,6 +186,32 @@ class scopa extends Table
         return $array[$index_list[$rand_number]];
     }
 
+    // Returns whether the active player has auto-play on
+    public function getPlayerAutoPlay($player_id)
+    {
+        return $this->getUserPreference($player_id, SCP_PREF_AUTO_PLAY);
+    }
+
+    // Returns whether the active player has auto-play on
+    public function getUserPreference($player_id, $pref_id)
+    {
+        if (!isset($this->user_preferences)) {
+            $sql = 'SELECT player_id, pref_id, pref_value FROM user_preferences';
+
+            $this->user_preferences = self::getDoubleKeyCollectionFromDB($sql, true);
+        }
+
+        $player_id = $this->getActivePlayerId();
+        if (array_key_exists($player_id, $this->user_preferences)) {
+            if (array_key_exists(SCP_PREF_AUTO_PLAY, $this->user_preferences[$player_id])) {
+                return $this->user_preferences[$player_id][SCP_PREF_AUTO_PLAY];
+            }
+        }
+
+        $game_preferences = $this->getTablePreferences();
+        return $game_preferences[$pref_id]['default'];
+    }
+
 
     //////////////////////////////////////////////////////////////////////////////
     //////////// Notification functions
@@ -284,7 +310,7 @@ class scopa extends Table
 
         // Update scores
         $this->notif_playerScores();
-        self::notifyAllPlayers('pause', '', []);
+        self::notifyAllPlayers('simplePause', '', ['time' => 2000]);
     }
 
     // A player wins points for variants: update DB & notify, but no statistic
@@ -310,7 +336,7 @@ class scopa extends Table
 
         // Update scores
         $this->notif_playerScores();
-        self::notifyAllPlayers('pause', '', []);
+        self::notifyAllPlayers('simplePause', '', ['time' => 2000]);
     }
 
     // There is a tie => notify everyone
@@ -321,7 +347,7 @@ class scopa extends Table
             'cards_captured' => clienttranslate('Multiple players captured the most cards. No point won!'),
             'coins_captured' => clienttranslate('Multiple players captured the most coins. No point won!'),
             'prime_score' => clienttranslate('Multiple players have the highest prime score. No point won!'),
-            'il_ponino' => clienttranslate('Noboty captured the 4 knights. No point won!'),
+            'il_ponino' => clienttranslate('Nobody captured the 4 knights. No point won!'),
         ];
         self::notifyAllPlayers('message', $tie_types[$tie_type], []);
     }
@@ -366,7 +392,7 @@ class scopa extends Table
             ]
         );
 
-        self::notifyAllPlayers('pause', '', []);
+        self::notifyAllPlayers('simplePause', '', ['time' => 2000]);
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -380,8 +406,11 @@ class scopa extends Table
 
     public function playCard($card_id_ajax, $cards_captured_ajax)
     {
-        // Check that this is the player's turn and that it is a "possible action" at this game state (see states.inc.php)
-        self::checkAction('playCard');
+        // Check if auto-play or not - if not, check player is allowed
+        $state = $this->gamestate->state();
+        if ($state['name'] == 'playerTurn') {
+            self::checkAction('playCard');
+        }
 
         $player_id = self::getActivePlayerId();
 
@@ -497,20 +526,13 @@ class scopa extends Table
     }
 
     // Change of user preferences
-    public function setUserPref($prefs)
+    public function setUserPref($pref_id, $pref_value)
     {
         $player_id = self::getCurrentPlayerId();
 
-        $sql = 'UPDATE player SET ';
-        $pref_sql = [];
-        foreach ($prefs as $key => $value) {
-            $pref_sql[] = $key.'="'.$value.'" ';
-        }
-        if (!empty($pref_sql)) {
-            $sql .= implode(', ', $pref_sql);
-            $sql .= ' WHERE player_id = '.$player_id;
-            self::DbQuery($sql);
-        }
+        $sql = 'REPLACE INTO user_preferences (player_id, pref_id, pref_value)';
+        $sql .= ' VALUES ('.$player_id.', '.$pref_id.', '.$pref_value.')';
+        self::DbQuery($sql);
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -589,8 +611,48 @@ class scopa extends Table
         if (0 == $this->cards->countCardInLocation('hand')) {
             $this->gamestate->nextState('handEnd');
         } else {
-            $player_id = self::activeNextPlayer();
-            self::giveExtraTime($player_id);
+            $next_player_id = self::activeNextPlayer();
+            self::giveExtraTime($next_player_id);
+            if ($this->getPlayerAutoPlay($next_player_id) == SCP_PREF_AUTO_PLAY_YES) {
+                $this->gamestate->nextState('autoPlayerTurn');
+            } else {
+                $this->gamestate->nextState('playerTurn');
+            }
+        }
+    }
+
+    // Plays automatically the last card in hand
+    public function stAutoPlayer()
+    {
+        $player_id = self::getActivePlayerId();
+
+        // Make sure the player indeed auto-plays
+        if ($this->getPlayerAutoPlay($player_id) != SCP_PREF_AUTO_PLAY_YES) {
+            $this->gamestate->nextState('playerTurn');
+        }
+
+
+        $cards = $this->cards->getCardsInLocation('hand', $player_id);
+        // Multiple cards ==> Manual choice
+        if (count($cards) != 1) {
+            $this->gamestate->nextState('playerTurn');
+            return;
+        }
+
+        $card = array_pop($cards);
+        $possible_captures = self::getCardCaptures($player_id);
+        // Capturing or not capturing, that is the question
+        if (!array_key_exists($card['id'], $possible_captures)) {
+            $this->playCard($card['id'], []);
+        } elseif (count($possible_captures[$card['id']]) == 1) {
+            $capture = array_pop($possible_captures[$card['id']]);
+            $cards_capture = array_map(function ($v) {
+                return $v['id'];
+            }, $capture['cards']);
+            $this->playCard($card['id'], $cards_capture);
+        }
+        // Multiple captures possible ==> Manual choice
+        else {
             $this->gamestate->nextState('playerTurn');
         }
     }
@@ -611,7 +673,7 @@ class scopa extends Table
     public function stDeckEnd()
     {
         // Sends a pause to process any pending event / animation
-        self::notifyAllPlayers('pause', '', []);
+        self::notifyAllPlayers('simplePause', '', ['time' => 2000]);
 
         // Give the remaining cards to the player who captured last
         $sql = 'SELECT player_id FROM player WHERE has_last_captured = TRUE';
@@ -658,7 +720,7 @@ class scopa extends Table
         } else {
             $game_options = $this->getTableOptions();
             $variant_id = $this->getGameStateValue('game_variant');
-            $scoring_rows['variant'] = $game_options[102]['values'][$variant_id]['name'];
+            $scoring_rows['variant'] = $game_options[SCP_VARIANT]['values'][$variant_id]['name'];
         }
 
         // Scoring for regular Scopa game
@@ -914,9 +976,26 @@ class scopa extends Table
 
     public function upgradeTableDb($from_version)
     {
+        // Added display preferences
         if ($from_version <= 2110081254) {
             $sql = 'ALTER TABLE DBPREFIX_player ADD `card_deck` VARCHAR(20) NOT NULL DEFAULT "italian",
                      ADD `display_card_labels` BOOLEAN NOT NULL DEFAULT 1';
+
+            self::applyDbUpgradeToAllDB($sql);
+        }
+
+        // Moved preferences to BGA's framework & an actual table (if needed in PHP)
+        if ($from_version <= 2110091744) {
+            $sql = 'ALTER TABLE DBPREFIX_player DROP `card_deck`,
+                     DROP `display_card_labels`';
+
+            self::applyDbUpgradeToAllDB($sql);
+            $sql = 'CREATE TABLE IF NOT EXISTS `user_preferences` (
+                      `player_id` int(10) NOT NULL,
+                      `pref_id` int(10) NOT NULL,
+                      `pref_value` int(10) NOT NULL,
+                      PRIMARY KEY (`player_id`, `pref_id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;';
 
             self::applyDbUpgradeToAllDB($sql);
         }
@@ -1005,10 +1084,6 @@ class scopa extends Table
         // Material info (used for displaying card labels)
         $result['colors'] = $this->colors;
         $result['values_label'] = $this->values_label;
-
-        // User preferences
-        $sql = 'SELECT 0, card_deck, display_card_labels FROM player WHERE player_id = '.$current_player_id;
-        $result['user_prefs'] = self::getCollectionFromDB($sql)['0'];
 
         // Cards in player hand
         $result['hand'] = $this->cards->getCardsInLocation('hand', $current_player_id);
