@@ -33,6 +33,12 @@ if (!defined('SCP_VARIANT_SCOPA')) {
     define('SCP_VARIANT_SCOPA_A_PERDERE', 9);
     define('SCP_VARIANT_SCOPA_FRAC', 10);
 
+    define('SCP_TEAM_PLAY', 103);
+    define('SCP_TEAM_PLAY_YES', 1);
+    define('SCP_TEAM_PLAY_NO', 2);
+
+
+
     define('SCP_PREF_DISPLAY_LABELS', 100);
     define('SCP_PREF_DISPLAY_LABELS_YES', 1);
     define('SCP_PREF_DISPLAY_LABELS_NO', 2);

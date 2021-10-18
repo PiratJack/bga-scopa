@@ -48,35 +48,63 @@ $game_options = [
         ],
         'default' => SCP_VARIANT_SCOPA,
     ],
+    SCP_TEAM_PLAY => [
+        'name' => totranslate('Team play'),
+        'values' => [
+            SCP_TEAM_PLAY_YES => [
+                'name' => totranslate('Play in teams'),
+                'tmdisplay' => totranslate('Play in teams'),
+            ],
+            SCP_TEAM_PLAY_NO => [
+                'name' => totranslate('Individual play'),
+                'tmdisplay' => totranslate('Individual play'),
+            ],
+        ],
+        'displaycondition' => [
+            [
+                'type' => 'minplayers',
+                'value' => 4,
+            ],
+            // Hide Teams if ELO is enabled
+            [
+                'type' => 'otheroption',
+                'id' => 201,
+                'value' => 1,
+            ]
+        ],
+        'notdisplayedmessage' => totranslate('Playing in teams is possible only with 4 or 6 players and with ELO off.'),
+        'displayconditionoperand' => 'and',
+        'default' => SCP_TEAM_PLAY_NO,
+    ],
 ];
 
 
-$game_preferences = array(
-    SCP_PREF_DISPLAY_LABELS => array(
+$game_preferences = [
+    SCP_PREF_DISPLAY_LABELS => [
         'name' => totranslate('Display labels on cards?'),
         'needReload' => false, // Handled through JS directly
-        'values' => array(
-            SCP_PREF_DISPLAY_LABELS_YES => array( 'name' => totranslate('Yes') ),
-            SCP_PREF_DISPLAY_LABELS_NO => array( 'name' => totranslate('No') )
-        ),
+        'values' => [
+            SCP_PREF_DISPLAY_LABELS_YES => [ 'name' => totranslate('Yes') ],
+            SCP_PREF_DISPLAY_LABELS_NO => [ 'name' => totranslate('No') ]
+        ],
         'default' => SCP_PREF_DISPLAY_LABELS_YES
-    ),
-    SCP_PREF_CARD_DECK => array(
+    ],
+    SCP_PREF_CARD_DECK => [
         'name' => totranslate('Card deck'),
         'needReload' => false, // Handled through JS directly
-        'values' => array(
-            SCP_PREF_CARD_DECK_ITALIAN => array( 'name' => totranslate('Italian') ),
-            SCP_PREF_CARD_DECK_STANDARD => array( 'name' => totranslate('Standard') )
-        ),
+        'values' => [
+            SCP_PREF_CARD_DECK_ITALIAN => [ 'name' => totranslate('Italian') ],
+            SCP_PREF_CARD_DECK_STANDARD => [ 'name' => totranslate('Standard') ]
+        ],
         'default' => SCP_PREF_CARD_DECK_ITALIAN
-    ),
-    SCP_PREF_AUTO_PLAY => array(
+    ],
+    SCP_PREF_AUTO_PLAY => [
         'name' => totranslate('Auto-play last card?'),
         'needReload' => false, // Doesn't generate any display change
-        'values' => array(
-            SCP_PREF_AUTO_PLAY_YES => array( 'name' => totranslate('Yes') ),
-            SCP_PREF_AUTO_PLAY_NO => array( 'name' => totranslate('No') )
-        ),
+        'values' => [
+            SCP_PREF_AUTO_PLAY_YES => [ 'name' => totranslate('Yes') ],
+            SCP_PREF_AUTO_PLAY_NO => [ 'name' => totranslate('No') ]
+        ],
         'default' => SCP_PREF_AUTO_PLAY_NO
-    ),
-);
+    ],
+];

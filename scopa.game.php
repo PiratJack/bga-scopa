@@ -22,7 +22,8 @@ class scopa extends Table
                 'target_score' => SCP_OPTION_POINTS_TO_WIN,
                 'max_capture_cards' => SCP_OPTION_MAX_CAPTURE,
                 'game_variant' => SCP_VARIANT,
-                 ]
+                'team_play' => SCP_TEAM_PLAY,
+            ]
         );
 
         $this->target_score_mapping = [
@@ -214,6 +215,74 @@ class scopa extends Table
 
 
     //////////////////////////////////////////////////////////////////////////////
+    //////////// Teams-related functions
+    ////////////
+
+    // Returns whether playing by teams is enabled
+    private function isTeamPlay()
+    {
+        return ($this->getGameStateValue('team_play') == SCP_TEAM_PLAY_YES);
+    }
+
+    // Return the name of a team or player based on its ID and type
+    private function getScorerNameById($scorer_id, $type)
+    {
+        if ($type == 'player') {
+            return self::getPlayerNameById($scorer_id);
+        } else {
+            if (!isset($this->teams)) {
+                $this->loadTeamsBasicInfos();
+            }
+            return $this->teams[$scorer_id]['team_name'];
+        }
+    }
+
+    // Returns data for all teams
+    private function loadTeamsBasicInfos($players = [])
+    {
+        if (!isset($this->teams)) {
+            if ($players == []) {
+                $sql = 'SELECT player_id, team_id FROM player';
+                $this->players_to_team = self::getCollectionFromDB($sql, true);
+                $players = $this->players_to_team;
+            }
+
+            $this->teams = [];
+            for ($team_id = 1; $team_id < (count($players)/2 + 1); $team_id++) {
+                $this->teams[$team_id] = [
+                    'team_id' => $team_id,
+                    'team_name' => str_replace('${team_id}', $team_id, clienttranslate('Team ${team_id}')),
+                    'players' => array_keys(array_filter($players, function ($v) use ($team_id) {
+                        return $v == $team_id;
+                    })),
+                ];
+            }
+        }
+        return $this->teams;
+    }
+
+    // Returns an array [player_id => team_id]
+    private function getPlayerTeam($player_id)
+    {
+        if (!isset($this->players_to_team)) {
+            $this->loadTeamsBasicInfos();
+        }
+
+        return $this->players_to_team[$player_id];
+    }
+
+    // Does the same as loadPlayerBasicInfos, with the team_id added
+    private function loadPlayerBasicInfosWithTeam()
+    {
+        $players = self::loadPlayersBasicInfos();
+        foreach ($players as $player_id => $player) {
+            $players[$player_id]['team_id'] = $this->getPlayerTeam($player_id);
+        }
+        return $players;
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////
     //////////// Notification functions
     ////////////
     // Note: some notifications are sent outside of the below ones
@@ -258,16 +327,29 @@ class scopa extends Table
 
         // Cards in player hand
         $cards = $this->cards->getCardsInLocation('hand', $player_id);
-        self::notifyPlayer($player_id, 'cardsInHand', 'Your cards are: <br />${cards_display}', ['cards' => $cards,
-        'cards_display' => $this->cardsToDisplay($cards)]);
+        self::notifyPlayer(
+            $player_id,
+            'cardsInHand',
+            'Your cards are: <br />${cards_display}',
+            [
+                'cards' => $cards,
+                'cards_display' => $this->cardsToDisplay($cards)
+            ]
+        );
     }
 
     // Sends the cards that are on the table
     private function notif_cardsOnTable()
     {
         $cards = $this->cards->getCardsInLocation('table');
-        self::notifyAllPlayers('cardsOnTable', 'Cards dealt to the table: <br />${cards_display}', ['cards' => $cards,
-        'cards_display' => $this->cardsToDisplay($cards)]);
+        self::notifyAllPlayers(
+            'cardsOnTable',
+            'Cards dealt to the table: <br />${cards_display}',
+            [
+                'cards' => $cards,
+                'cards_display' => $this->cardsToDisplay($cards)
+            ]
+        );
     }
 
     // Updates player's scores
@@ -279,13 +361,20 @@ class scopa extends Table
     }
 
     // A player wins: update score, statistics & send notification
-    private function playerWin($player_id, $win_type, &$scoring_table = null)
+    private function playerWin($scorer_id, $win_type, &$scoring_table = null)
     {
-        $this->incStat(1, $win_type, $player_id);
-        $this->DbQuery('UPDATE player SET player_score=player_score+1 WHERE player_id="'.$player_id.'"');
+        // Define who scored - team or player + their name (for notifications purpose)
+        $scorer_type = $this->isTeamPlay() ? 'team' : 'player';
+        $scorer_name = self::getScorerNameById($scorer_id, $scorer_type);
+
+        if (!$this->isTeamPlay()) {
+            $this->incStat(1, $win_type, $scorer_id);
+        }
+
+        $this->DbQuery('UPDATE player SET player_score=player_score+1 WHERE '.$scorer_type.'_id = "'.$scorer_id.'"');
 
         if ('scopa_number' == $win_type) {
-            $this->DbQuery('UPDATE player SET scopa_in_round=scopa_in_round+1 WHERE player_id="'.$player_id.'"');
+            $this->DbQuery('UPDATE player SET scopa_in_round=scopa_in_round+1 WHERE '.$scorer_type.'_id="'.$scorer_id.'"');
         }
 
         $win_types = [
@@ -299,13 +388,13 @@ class scopa extends Table
             'message',
             $win_types[$win_type],
             [
-                'player_name' => self::getPlayerNameById($player_id),
+                'player_name' => $scorer_name, // called "player_name" so that JS colors the names
             ]
         );
 
         if (!is_null($scoring_table)) {
-            ++$scoring_table['added_points'][$player_id];
-            ++$scoring_table['final_score'][$player_id];
+            ++$scoring_table['added_points'][$scorer_id];
+            ++$scoring_table['final_score'][$scorer_id];
         }
 
         // Update scores
@@ -314,9 +403,13 @@ class scopa extends Table
     }
 
     // A player wins points for variants: update DB & notify, but no statistic
-    private function playerWinsVariantPoints($player_id, $win_type, $nb_points, &$scoring_table)
+    private function playerWinsVariantPoints($scorer_id, $win_type, $nb_points, &$scoring_table)
     {
-        $this->DbQuery('UPDATE player SET player_score=player_score+'.$nb_points.' WHERE player_id="'.$player_id.'"');
+        // Define who scored - team or player + their name (for notifications purpose)
+        $scorer_type = $this->isTeamPlay() ? 'team' : 'player';
+        $scorer_name = self::getScorerNameById($scorer_id, $scorer_type);
+
+        $this->DbQuery('UPDATE player SET player_score=player_score+'.$nb_points.' WHERE '.$scorer_type.'_id = "'.$scorer_id.'"');
 
         $win_types = [
             'il_ponino' => clienttranslate('${player_name} captured all knights and marks ${nb_points} points.'),
@@ -325,14 +418,14 @@ class scopa extends Table
             'message',
             $win_types[$win_type],
             [
-                'player_name' => self::getPlayerNameById($player_id),
+                'player_name' => $scorer_name,  // called "player_name" so that JS colors the names
                 'nb_points' => $nb_points,
             ]
         );
 
-        $scoring_table['variant'][$player_id] += $nb_points;
-        $scoring_table['added_points'][$player_id] += $nb_points;
-        $scoring_table['final_score'][$player_id] += $nb_points;
+        $scoring_table['variant'][$scorer_id] += $nb_points;
+        $scoring_table['added_points'][$scorer_id] += $nb_points;
+        $scoring_table['final_score'][$scorer_id] += $nb_points;
 
         // Update scores
         $this->notif_playerScores();
@@ -343,13 +436,23 @@ class scopa extends Table
     private function playerTie($tie_type)
     {
         // Ties are not possible for sette bello or scopa
-        $tie_types = [
-            'cards_captured' => clienttranslate('Multiple players captured the most cards. No point won!'),
-            'coins_captured' => clienttranslate('Multiple players captured the most coins. No point won!'),
-            'prime_score' => clienttranslate('Multiple players have the highest prime score. No point won!'),
-            'il_ponino' => clienttranslate('Nobody captured the 4 knights. No point won!'),
-        ];
+        if ($this->isTeamPlay()) {
+            $tie_types = [
+                'cards_captured' => clienttranslate('Multiple teams captured the most cards. No point won!'),
+                'coins_captured' => clienttranslate('Multiple teams captured the most coins. No point won!'),
+                'prime_score' => clienttranslate('Multiple teams have the highest prime score. No point won!'),
+                'il_ponino' => clienttranslate('No team captured the 4 knights. No point won!'),
+            ];
+        } else {
+            $tie_types = [
+                'cards_captured' => clienttranslate('Multiple players captured the most cards. No point won!'),
+                'coins_captured' => clienttranslate('Multiple players captured the most coins. No point won!'),
+                'prime_score' => clienttranslate('Multiple players have the highest prime score. No point won!'),
+                'il_ponino' => clienttranslate('Nobody captured the 4 knights. No point won!'),
+            ];
+        }
         self::notifyAllPlayers('message', $tie_types[$tie_type], []);
+        self::notifyAllPlayers('simplePause', '', ['time' => 2000]);
     }
 
     // Display player score table
@@ -357,27 +460,30 @@ class scopa extends Table
     {
         // Format the scoring table
         $score_table_display = [];
-        $players = self::loadPlayersBasicInfos();
-        ksort($players);
-        $nb_players = count($players);
+        if ($this->isTeamPlay()) {
+            $scorers = $this->loadTeamsBasicInfos();
+        } else {
+            $scorers = self::loadPlayersBasicInfos();
+        }
+        ksort($scorers);
 
-        // First line: player names
+        // First line: names
         $header = [''];
-        foreach ($players as $player_id => $player) {
+        foreach ($scorers as $scorer_id => $scorer) {
             $header[] = [
-                'str' => '${player_name}',
-                'args' => ['player_name' => $player['player_name']],
+                'str' => '${player_name}', // called "player_name" so that JS colors the names
+                'args' => ['player_name' => isset($scorer['player_name']) ? $scorer['player_name'] : $scorer['team_name']],
                 'type' => 'header',
             ];
         }
         $score_table_display[] = $header;
 
-        // This is used to default all player's scores to 0 for each row (otherwise they're not displayed)
-        $player_to_zero = array_fill_keys(array_keys($players), 0);
+        // This is used to default all scores to 0 for each row (otherwise they're not displayed)
+        $scorer_to_zero = array_fill_keys(array_keys($scorers), 0);
         foreach ($scoring_rows as $code => $label) {
             $score = $score_table[$code];
             ksort($score);
-            $score_table_display[] = [0 => $label] + $score + $player_to_zero;
+            $score_table_display[] = [0 => $label] + $score + $scorer_to_zero;
         }
 
         // Finally, send notification
@@ -514,7 +620,11 @@ class scopa extends Table
             if (0 == $this->cards->countCardInLocation('table')) {
                 // If the player is last and it's the last round, no scopa is possible
                 if (0 != $this->cards->countCardInLocation('deck') || 0 != $this->cards->countCardInLocation('hand')) {
-                    $this->playerWin($player_id, 'scopa_number');
+                    if ($this->isTeamPlay()) {
+                        $this->playerWin($this->getPlayerTeam($player_id), 'scopa_number');
+                    } else {
+                        $this->playerWin($player_id, 'scopa_number');
+                    }
                 }
             }
         }
@@ -695,6 +805,16 @@ class scopa extends Table
         }
 
         $cards = $this->cards->getCardsInLocation('capture');
+        $players = self::loadPlayerBasicInfosWithTeam();
+        $scorers = $players;
+
+        if ($this->isTeamPlay()) {
+            $scorers = $this->loadTeamsBasicInfos($players);
+
+            foreach ($cards as $card_id => $card) {
+                $cards[$card_id]['location_arg'] = $players[$card['location_arg']]['team_id'];
+            }
+        }
 
         // Scoring table initialization
         $score_table = [];
@@ -709,9 +829,8 @@ class scopa extends Table
             'added_points' => clienttranslate('Points won this round'),
             'final_score' => clienttranslate('Final score'),
         ];
-        $players = self::loadPlayersBasicInfos();
         foreach ($scoring_rows as $code => $label) {
-            $score_table[$code] = array_fill_keys(array_keys($players), 0);
+            $score_table[$code] = array_fill_keys(array_keys($scorers), 0);
         }
 
         // For regular scopa, remove the "variant" row
@@ -764,14 +883,24 @@ class scopa extends Table
         // Should we go to next round or not?
         // Is the game over or not?
         $target_score = $this->target_score_mapping[$this->getGameStateValue('target_score')];
-        $sql = 'SELECT player_id, player_score
-                            FROM player
-                            WHERE player_score >= '.$target_score;
+        if ($this->isTeamPlay()) {
+            $sql = 'SELECT DISTINCT team_id, player_score
+                                FROM player
+                                WHERE player_score >= '.$target_score;
+        } else {
+            $sql = 'SELECT player_id, player_score
+                                FROM player
+                                WHERE player_score >= '.$target_score;
+        }
         $player_score = self::getCollectionFromDb($sql, true);
         if (0 == count($player_score)) {
             // No player has enough, start new round
             $this->gamestate->nextState('dealStart');
-            self::notifyAllPlayers('message', clienttranslate('No player has enough points. The game continues!'), []);
+            if ($this->isTeamPlay()) {
+                self::notifyAllPlayers('message', clienttranslate('No team has enough points. The game continues!'), []);
+            } else {
+                self::notifyAllPlayers('message', clienttranslate('No player has enough points. The game continues!'), []);
+            }
 
             return;
         }
@@ -785,7 +914,11 @@ class scopa extends Table
         );
         if (1 != count($winners)) {
             // At least 2 players with the same score, start a new round
-            self::notifyAllPlayers('message', clienttranslate('The 2 top players have the same score. The game continues!'), []);
+            if ($this->isTeamPlay()) {
+                self::notifyAllPlayers('message', clienttranslate('The top teams have the same score. The game continues!'), []);
+            } else {
+                self::notifyAllPlayers('message', clienttranslate('The top players have the same score. The game continues!'), []);
+            }
             $this->gamestate->nextState('dealStart');
         } else {
             // We have a winner!
@@ -801,13 +934,17 @@ class scopa extends Table
     private function scoreScopa($cards, &$score_table)
     {
         // Scopa score is from DB directly
-        $sql = 'SELECT player_id, player_score, scopa_in_round FROM player';
+        if ($this->isTeamPlay()) {
+            $sql = 'SELECT team_id, player_score score, scopa_in_round FROM player';
+        } else {
+            $sql = 'SELECT player_id, player_score score, scopa_in_round FROM player';
+        }
         $values = self::getCollectionFromDb($sql);
 
         // Scopa points have already been added to the score, so remove them
         $score_table['previous_score'] = array_map(
             function ($v) {
-                return $v['player_score'] - $v['scopa_in_round'];
+                return $v['score'] - $v['scopa_in_round'];
             },
             $values
         );
@@ -868,15 +1005,20 @@ class scopa extends Table
     // Scores Prime points (= complex calculation)
     private function scorePrime($cards, &$score_table)
     {
-        $players_prime = array_fill_keys(array_keys($this->loadPlayersBasicInfos()), ['1' => '', '2' => '', '3' => '', '4' => '']);
+        if ($this->isTeamPlay()) {
+            $scorers = $this->loadTeamsBasicInfos();
+        } else {
+            $scorers = $this->loadPlayersBasicInfos();
+        }
+        $scorers_prime = array_fill_keys(array_keys($scorers), ['1' => '', '2' => '', '3' => '', '4' => '']);
         $point_per_card = $this->prime_points;
-        foreach ($players_prime as $player_id => $colors) {
-            $playerCards = array_filter($cards, function ($v) use ($player_id) {
-                return $v['location_arg'] == $player_id;
+        foreach ($scorers_prime as $scorer_id => $colors) {
+            $scorer_cards = array_filter($cards, function ($v) use ($scorer_id) {
+                return $v['location_arg'] == $scorer_id;
             });
             foreach ($colors as $color_id => $temp) {
                 $cards_of_color = array_filter(
-                    $playerCards,
+                    $scorer_cards,
                     function ($card) use ($color_id) {
                         return $card['type'] == $color_id;
                     }
@@ -889,14 +1031,14 @@ class scopa extends Table
                     $cards_of_color
                 );
                 if (!empty($prime_points)) {
-                    $players_prime[$player_id][$color_id] = max($prime_points);
+                    $scorers_prime[$scorer_id][$color_id] = max($prime_points);
                 } else {
-                    $players_prime[$player_id][$color_id] = 0;
+                    $scorers_prime[$scorer_id][$color_id] = 0;
                 }
             }
-            $players_prime[$player_id] = array_sum($players_prime[$player_id]);
+            $scorers_prime[$scorer_id] = array_sum($scorers_prime[$scorer_id]);
         }
-        $score_table['prime_score'] = $players_prime;
+        $score_table['prime_score'] = $scorers_prime;
     }
 
     // Scores Il ponino points (= doubles Scopa points if captured all knights)
@@ -924,6 +1066,10 @@ class scopa extends Table
     public function zombieTurn($state, $active_player)
     {
         $statename = $state['name'];
+
+        if ($this->isTeamPlay()) {
+            throw new BgaVisibleSystemException('Zombie mode not supported in team plays, as it would disadvantage one of the teams');
+        }
 
         if ('activeplayer' === $state['type']) {
             // Choose which card to play
@@ -956,7 +1102,7 @@ class scopa extends Table
             return;
         }
 
-        throw new feException('Zombie mode not supported at this game state: '.$statename);
+        throw new BgaVisibleSystemException('Zombie mode not supported at this game state: '.$statename);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////:
@@ -1019,14 +1165,10 @@ class scopa extends Table
         $sql = 'DELETE FROM player WHERE 1 ';
         self::DbQuery($sql);
 
-        // Set the colors of the players with HTML color code
-        // The default below is red/green/blue/orange/brown
-        // The number of colors defined here must correspond to the maximum number of players allowed for the gams
         $gameinfos = self::getGameinfos();
         $default_colors = $gameinfos['player_colors'];
 
         // Create players
-        // Note: if you added some extra field on 'player' table in the database (dbmodel.sql), you can initialize it there.
         $sql = 'INSERT INTO player (player_id, player_score, player_color, player_canal, player_name, player_avatar) VALUES ';
         $values = [];
         foreach ($players as $player_id => $player) {
@@ -1036,9 +1178,37 @@ class scopa extends Table
         $sql .= implode($values, ',');
         self::DbQuery($sql);
         self::reattributeColorsBasedOnPreferences($players, $gameinfos['player_colors']);
-        self::reloadPlayersBasicInfos();
 
-        // Init global values with their initial values
+        // Assign players to teams
+        if ($this->isTeamPlay()) {
+            $team_id = 0;
+            $teams = [0 => [], 1 => []];
+            if (count($player) == 6) {
+                $teams[2] = [];
+            }
+
+            $player_order = $this->getNextPlayerTable();
+            $player_pointer = $player_order[0];
+            $i = 0;
+            while ($i != count($players)) {
+                $teams[$team_id][] = $player_pointer;
+                $team_id ++;
+                $team_id %= (count($players) / 2);
+
+                $player_pointer = $player_order[$player_pointer];
+                $i++;
+            }
+
+            foreach ($teams as $team_id => $team_players) {
+                // The "+1" is needed so that team_id != 0
+                // Having it equal to 0 is confusing for players + it makes some JS piece fail
+                $sql = 'UPDATE player SET team_id = '.$team_id.'+1 WHERE player_id IN ('.implode(', ', $team_players).')';
+                self::DbQuery($sql);
+            }
+        }
+
+
+        self::reloadPlayersBasicInfos();
 
         // Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
@@ -1078,7 +1248,7 @@ class scopa extends Table
         $current_player_id = self::getCurrentPlayerId();
 
         // Get information about players
-        $sql = 'SELECT player_id id, player_score score FROM player ';
+        $sql = 'SELECT player_id id, player_score score, team_id FROM player ';
         $result['players'] = self::getCollectionFromDb($sql);
 
         // Material info (used for displaying card labels)

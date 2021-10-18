@@ -180,6 +180,33 @@
     display: none;
 }
 
+/* Fix for Safari - #50404 */
+.stockitem {
+    background-size: 1000% 400%;
+}
+
+
+.player_board_content .scp_team {
+    display: inline-block;
+
+    width: 25px;
+    height: 25px;
+    margin-left: 30px;
+
+    border: 1px solid black;
+    border-radius: 25px;
+
+    text-align: center;
+    line-height: 25px;
+    font-weight: bold;
+}
+
+.player_board_content .scp_team:empty {
+    display: none;
+}
+
+
+
 
 @media only screen and (min-width: 1720px) {
 

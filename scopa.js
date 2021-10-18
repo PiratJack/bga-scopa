@@ -42,12 +42,21 @@ define([
                 for (var playerId in gamedatas.players) {
                     var player = gamedatas.players[playerId];
 
+                    if (gamedatas.players[player.id].team_id == "0")
+                        gamedatas.players[player.id].team_id = '';
+
                     // Setting up players boards
                     var player_board_div = $('player_board_' + playerId);
                     dojo.place(this.format_block('jstpl_player_board', {
                         player_id: player.id,
-                        card_count: gamedatas.players_hand[player.id]
+                        card_count: gamedatas.players_hand[player.id],
+                        team_id: gamedatas.players[player.id].team_id,
                     }), player_board_div);
+
+                    var tooltipText = dojo.string.substitute(_("This player belongs to team ${team}"), {
+                        'team': gamedatas.players[player.id].team_id,
+                    });
+                    this.addTooltip('cp_team_' + player.id, tooltipText, '')
                 }
                 $('deckcard').innerHTML = gamedatas.players_hand.deck;
 
@@ -330,7 +339,7 @@ define([
                     if (i == 'deck')
                         $('deckcard').innerHTML = counts[i];
                     else
-                        $('cp_board_' + i).innerHTML = counts[i];
+                        $('cp_deck_' + i).innerHTML = counts[i];
             },
 
             // Update cards in hand
@@ -494,7 +503,7 @@ define([
                 }
 
                 // Preferences that need to be sent to server (only if read-write)
-                if (!(this.isSpectator || g_archive_mode)) {
+                if (!(this.isSpectator || g_archive_mode || typeof g_replayFrom != 'undefined')) {
                     if ([102].includes(prefId)) {
                         this.ajaxcall("/scopa/scopa/setUserPref.html", {
                             pref_id: prefId,
@@ -533,10 +542,10 @@ define([
             // Notification setup
             setupNotifications: function() {
                 dojo.subscribe('cardPlayedToTable', this, 'notif_cardPlayedToTable');
-                this.notifqueue.setSynchronous('cardPlayedToTable', 1500);
+                this.notifqueue.setSynchronous('cardPlayedToTable', 2500);
 
                 dojo.subscribe('cardPlayedAndCapture', this, 'notif_cardPlayedAndCapture');
-                this.notifqueue.setSynchronous('cardPlayedAndCapture', 3000);
+                this.notifqueue.setSynchronous('cardPlayedAndCapture', 4500);
 
                 dojo.subscribe('cardsCount', this, 'notif_cardsCount');
 

@@ -42,7 +42,7 @@ $gameinfos = [
 
     'tie_breaker_description' => '',
 
-    'losers_not_ranked' => false,
+    'losers_not_ranked' => true,
 
     'solo_mode_ranked' => false,
 
