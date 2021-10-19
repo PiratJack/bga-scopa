@@ -25,7 +25,7 @@ define([
                 this.cardwidth = 68;
                 this.cardheight = 111;
 
-                if (window.matchMedia("(min-width: 1500px)").matches) {
+                if (window.matchMedia("(min-width: 1720px)").matches) {
                     this.cardwidth = 132;
                     this.cardheight = 219;
                 }
