@@ -668,33 +668,36 @@ class scopa extends Table
         $this->cards->moveAllCardsInLocation(null, 'deck');
         $this->cards->shuffle('deck');
 
-        // Deal 4 cards to the table (without re-shuffling)
-        $cards = $this->cards->pickCardsForLocation(4, 'deck', 'table', 0, true);
-
-        // If there are 3 or 4 kings, then reshuffle as needed
-        $kings = array_filter(
-            $cards,
-            function ($card) {
-                return 10 == $card['type_arg'];
-            }
-        );
-        while (count($kings) >= 3) {
-            $this->cards->moveAllCardsInLocation(null, 'deck');
+        // In Scopone scientifico, no cards are dealt on the table
+        if (!in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPONE_SCIENTIFICO])) {
+            // Deal 4 cards to the table (without re-shuffling)
             $cards = $this->cards->pickCardsForLocation(4, 'deck', 'table', 0, true);
+
+            // If there are 3 or 4 kings, then reshuffle as needed
             $kings = array_filter(
                 $cards,
                 function ($card) {
                     return 10 == $card['type_arg'];
                 }
             );
+            while (count($kings) >= 3) {
+                $this->cards->moveAllCardsInLocation(null, 'deck');
+                $cards = $this->cards->pickCardsForLocation(4, 'deck', 'table', 0, true);
+                $kings = array_filter(
+                    $cards,
+                    function ($card) {
+                        return 10 == $card['type_arg'];
+                    }
+                );
+            }
         }
+
+        // Notify all players about the card's table
+        $this->notif_cardsOnTable();
 
         // Reset the counter of Scopa of the round
         $sql = 'UPDATE player SET scopa_in_round = 0';
         self::DbQuery($sql);
-
-        // Notify all players about the card's table
-        $this->notif_cardsOnTable();
 
         // Next, deal cards to each player
         $this->gamestate->nextState();
@@ -703,10 +706,15 @@ class scopa extends Table
     // Deal new cards to each player from the deck
     public function stHandStart()
     {
-        // Deal 3 cards to each player (without re-shuffling)
+        // Deal cards to each player (without re-shuffling)
+        $cards_in_hand = [
+            SCP_VARIANT_SCOPA => 3,
+            SCP_VARIANT_IL_PONINO => 3,
+            SCP_VARIANT_SCOPONE_SCIENTIFICO => 10,
+        ][$this->getGameStateValue('game_variant')];
         $players = self::loadPlayersBasicInfos();
         foreach ($players as $player_id => $player) {
-            $cards = $this->cards->pickCardsForLocation(3, 'deck', 'hand', $player_id, true);
+            $cards = $this->cards->pickCardsForLocation($cards_in_hand, 'deck', 'hand', $player_id, true);
             $this->notif_cardsInHand($player_id);
         }
         $this->notif_cardsCount();
