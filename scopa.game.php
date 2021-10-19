@@ -1145,6 +1145,13 @@ class scopa extends Table
 
             self::applyDbUpgradeToAllDB($sql);
         }
+
+        // Added possibility to play in teams
+        if ($from_version <= 2110111902) {
+            $sql = 'ALTER TABLE DBPREFIX_player ADD `team_id` INT NOT NULL';
+
+            self::applyDbUpgradeToAllDB($sql);
+        }
     }
 
     protected function getGameName()

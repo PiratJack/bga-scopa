@@ -67,7 +67,7 @@
 #capturechoice {
     width: min-content;
     min-width: 380px;
-    clear: both;
+    float: left;
 }
 
 /* Group of cards to capture */

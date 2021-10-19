@@ -111,10 +111,14 @@ define([
 
                 // Initialize array for captures & hide capture choices
                 this.cardCaptures = [];
-                dojo.fadeOut({
+                var fadeCapture = dojo.fadeOut({
                     node: 'capturechoice',
                     duration: 0
-                }).play();
+                });
+                dojo.connect(fadeCapture, 'onEnd', (node) => {
+                    dojo.query(node).addClass('scp_hidden');
+                });
+                fadeCapture.play();
             },
 
 
@@ -292,19 +296,27 @@ define([
                         this.renderCard(capture.cards[i], captureGroup);
 
                 }
-                dojo.fadeIn({
+                var fadeCapture = dojo.fadeIn({
                     node: 'capturechoice',
                     duration: 0
-                }).play();
+                });
+                dojo.connect(fadeCapture, 'beforeBegin', (node) => {
+                    dojo.query(node).removeClass('scp_hidden');
+                });
+                fadeCapture.play();
             },
 
             // Hides the block to select a capture option
             hideCaptureOptions: function() {
                 dojo.query('.scp_capturegroup').forEach(dojo.destroy);
-                dojo.fadeOut({
+                var fadeCapture = dojo.fadeOut({
                     node: 'capturechoice',
                     duration: 0
-                }).play();
+                });
+                dojo.connect(fadeCapture, 'onEnd', (node) => {
+                    dojo.query(node).addClass('scp_hidden');
+                });
+                fadeCapture.play();
             },
 
             // Displays / hides tooltip & dotted border based on which cards can capture
