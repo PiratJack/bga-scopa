@@ -185,7 +185,7 @@ define([
 
                 var tooltipHideClass = dojo.query("#preference_control_100")[0].value == "2" ? 'scp_hidden' : '';
                 dojo.place(this.format_block('jstpl_card_label', {
-                    'card_label': text,
+                    card_label: text,
                     added_classes: tooltipHideClass
                 }), card_div.id);
 
@@ -195,6 +195,11 @@ define([
 
             // Displays a card in a given element
             renderCard: function(card, position) {
+                var text = dojo.string.substitute(_("${value} of ${suit}"), {
+                    'value': this.gamedatas.values_label[card.type_arg],
+                    'suit': this.gamedatas.colors[card.type].name,
+                });
+                var tooltipHideClass = dojo.query("#preference_control_100")[0].value == "2" ? 'scp_hidden' : '';
                 return dojo.place(
                     this.format_block(
                         'jstpl_card', {
@@ -202,6 +207,8 @@ define([
                             x: this.cardwidth * (parseInt(card.type_arg) - 1),
                             y: this.cardheight * (parseInt(card.type) - 1),
                             deck_class: this.getCardDeckClass(),
+                            card_label: text,
+                            added_classes: tooltipHideClass
                         }
                     ),
                     position

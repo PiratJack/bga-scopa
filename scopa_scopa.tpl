@@ -56,7 +56,7 @@
 
 
 <script type="text/javascript">
-    var jstpl_card = '<div class="scp_card ${deck_class}" style="background-position:-${x}px -${y}px" id="card_${card_id}" data-card="${card_id}"></div>';
+    var jstpl_card = '<div class="scp_card ${deck_class}" style="background-position:-${x}px -${y}px" id="card_${card_id}" data-card="${card_id}"><div class="scp_card_label ${added_classes}">${card_label}</div></div>';
 
     var jstpl_capturegroup = '<div class="scp_capturegroup" id="capturegroup_${id}" data-cards="${cards_ids}"></div>';
 
