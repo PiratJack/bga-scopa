@@ -172,14 +172,8 @@ $game_options = [
                 'type' => 'minplayers',
                 'value' => 4,
             ],
-            // Hide Teams if ELO is enabled
-            [
-                'type' => 'otheroption',
-                'id' => 201,
-                'value' => 1,
-            ]
         ],
-        'notdisplayedmessage' => totranslate('Playing in teams is possible only with 4 or 6 players and with ELO off.'),
+        'notdisplayedmessage' => totranslate('Playing in teams is possible only with 4 or 6 players.'),
         'displayconditionoperand' => 'and',
         'default' => SCP_TEAM_PLAY_NO,
     ],

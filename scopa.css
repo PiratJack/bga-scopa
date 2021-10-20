@@ -154,7 +154,7 @@
 
 /* Deck of cards */
 .scp_deck {
-    background-image: url('img/deck.jpg');
+    background-image: url('img/sprites.png');
     background-size: cover;
     text-align: center;
     font-weight: bold;
@@ -189,16 +189,19 @@
 .player_board_content .scp_team {
     display: inline-block;
 
-    width: 25px;
-    height: 25px;
-    margin-left: 30px;
+    width: 100px;
+    height: 55px;
+    margin-left: 20px;
+    padding-left: 50px;
 
-    border: 1px solid black;
-    border-radius: 25px;
+    background-image: url('img/sprites.png');
+    background-size: 80%;
+    background-position: -60px 15px;
+    background-repeat: no-repeat;
 
-    text-align: center;
-    line-height: 25px;
-    font-weight: bold;
+    line-height: 55px;
+    font-size: 90%;
+    font-style: italic;
 }
 
 .player_board_content .scp_team:empty {

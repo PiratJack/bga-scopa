@@ -244,17 +244,26 @@ class scopa extends Table
             if ($players == []) {
                 $sql = 'SELECT player_id, team_id FROM player';
                 $this->players_to_team = self::getCollectionFromDB($sql, true);
-                $players = $this->players_to_team;
+                $players = $this->loadPlayerBasicInfosWithTeam();
             }
 
             $this->teams = [];
             for ($team_id = 1; $team_id < (count($players)/2 + 1); $team_id++) {
+                $team_players = array_filter($players, function ($v) use ($team_id) {
+                    return $v['team_id'] == $team_id;
+                });
+
+                $team_players_id = array_keys($team_players);
+                self::dump('$team_players', $team_players);
+
+                $team_name = clienttranslate('Team ${player1} and ${player2}');
+                $team_name = str_replace('${player1}', $team_players[$team_players_id[0]]['player_name'], $team_name);
+                $team_name = str_replace('${player2}', $team_players[$team_players_id[1]]['player_name'], $team_name);
+
                 $this->teams[$team_id] = [
                     'team_id' => $team_id,
-                    'team_name' => str_replace('${team_id}', $team_id, clienttranslate('Team ${team_id}')),
-                    'players' => array_keys(array_filter($players, function ($v) use ($team_id) {
-                        return $v == $team_id;
-                    })),
+                    'team_name' => $team_name,
+                    'players' => array_keys($team_players),
                 ];
             }
         }
@@ -269,6 +278,21 @@ class scopa extends Table
         }
 
         return $this->players_to_team[$player_id];
+    }
+
+    // Returns the ID of the player's partner
+    private function getPlayerAlly($player_id)
+    {
+        if (!isset($this->players_to_team)) {
+            $this->loadTeamsBasicInfos();
+        }
+
+        $players = $this->teams[$this->players_to_team[$player_id]]['players'];
+        $ally = array_filter($players, function ($v) use ($player_id) {
+            return $v != $player_id;
+        });
+
+        return array_pop($ally);
     }
 
     // Does the same as loadPlayerBasicInfos, with the team_id added
@@ -1265,6 +1289,11 @@ class scopa extends Table
         // Get information about players
         $sql = 'SELECT player_id id, player_score score, team_id FROM player ';
         $result['players'] = self::getCollectionFromDb($sql);
+        if ($this->isTeamPlay()) {
+            foreach ($result['players'] as $player_id => $player) {
+                $result['players'][$player_id]['ally'] = $this->getPlayerAlly($player_id);
+            }
+        }
 
         // Material info (used for displaying card labels)
         $result['colors'] = $this->colors;

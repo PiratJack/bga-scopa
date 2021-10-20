@@ -42,21 +42,32 @@ define([
                 for (var playerId in gamedatas.players) {
                     var player = gamedatas.players[playerId];
 
-                    if (gamedatas.players[player.id].team_id == "0")
+                    // Not a team game
+                    if (gamedatas.players[player.id].team_id == "0") {
                         gamedatas.players[player.id].team_id = '';
 
-                    // Setting up players boards
-                    var player_board_div = $('player_board_' + playerId);
-                    dojo.place(this.format_block('jstpl_player_board', {
-                        player_id: player.id,
-                        card_count: gamedatas.players_hand[player.id],
-                        team_id: gamedatas.players[player.id].team_id,
-                    }), player_board_div);
+                        // Setting up players boards
+                        var player_board_div = $('player_board_' + playerId);
+                        dojo.place(this.format_block('jstpl_player_board', {
+                            player_id: player.id,
+                            card_count: gamedatas.players_hand[player.id],
+                            player_name: '',
+                        }), player_board_div);
+                    } else {
+                        // Setting up players boards
+                        var player_board_div = $('player_board_' + playerId);
+                        var ally_id = gamedatas.players[player.id].ally;
+                        dojo.place(this.format_block('jstpl_player_board', {
+                            player_id: player.id,
+                            card_count: gamedatas.players_hand[player.id],
+                            player_name: gamedatas.players[ally_id].name,
+                        }), player_board_div);
 
-                    var tooltipText = dojo.string.substitute(_("This player belongs to team ${team}"), {
-                        'team': gamedatas.players[player.id].team_id,
-                    });
-                    this.addTooltip('cp_team_' + player.id, tooltipText, '')
+                        var tooltipText = dojo.string.substitute(_("This player plays with ${player_name}"), {
+                            player_name: gamedatas.players[ally_id].name,
+                        });
+                        this.addTooltip('cp_team_' + player.id, tooltipText, '')
+                    }
                 }
                 $('deckcard').innerHTML = gamedatas.players_hand.deck;
 
