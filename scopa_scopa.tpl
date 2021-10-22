@@ -60,7 +60,7 @@
 
     var jstpl_capturegroup = '<div class="scp_capturegroup" id="capturegroup_${id}" data-cards="${cards_ids}"></div>';
 
-    var jstpl_player_board = '<div class="scp_deck" id="cp_deck_${player_id}">${card_count}</div><div class="scp_team" id="cp_team_${player_id}">${player_name}</div>';
+    var jstpl_player_board = '<div class="scp_deck" id="cp_deck_${player_id}">${card_count}</div><div class="scp_team" id="cp_team_${player_id}">${ally_name}</div>';
 
     var jstpl_card_label = '<div class="scp_card_label ${added_classes}">${card_label}</div>';
 </script>

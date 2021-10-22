@@ -43,30 +43,28 @@ define([
                     var player = gamedatas.players[playerId];
 
                     // Not a team game
-                    if (gamedatas.players[player.id].team_id == "0") {
-                        gamedatas.players[player.id].team_id = '';
-
+                    if (typeof gamedatas.players[playerId].team_id == 'undefined') {
                         // Setting up players boards
                         var player_board_div = $('player_board_' + playerId);
                         dojo.place(this.format_block('jstpl_player_board', {
-                            player_id: player.id,
-                            card_count: gamedatas.players_hand[player.id],
-                            player_name: '',
+                            player_id: playerId,
+                            card_count: gamedatas.players_hand[playerId],
+                            ally_name: '',
                         }), player_board_div);
                     } else {
                         // Setting up players boards
                         var player_board_div = $('player_board_' + playerId);
-                        var ally_id = gamedatas.players[player.id].ally;
+                        var ally_id = gamedatas.players[playerId].ally;
                         dojo.place(this.format_block('jstpl_player_board', {
-                            player_id: player.id,
-                            card_count: gamedatas.players_hand[player.id],
-                            player_name: gamedatas.players[ally_id].name,
+                            player_id: playerId,
+                            card_count: gamedatas.players_hand[playerId],
+                            ally_name: gamedatas.players[ally_id].name,
                         }), player_board_div);
 
-                        var tooltipText = dojo.string.substitute(_("This player plays with ${player_name}"), {
-                            player_name: gamedatas.players[ally_id].name,
+                        var tooltipText = dojo.string.substitute(_("This player plays with ${ally_name}"), {
+                            ally_name: gamedatas.players[ally_id].name,
                         });
-                        this.addTooltip('cp_team_' + player.id, tooltipText, '')
+                        this.addTooltip('cp_team_' + playerId, tooltipText, '')
                     }
                 }
                 $('deckcard').innerHTML = gamedatas.players_hand.deck;
@@ -354,7 +352,6 @@ define([
 
             // Hides tooltip & dotted border based on which cards can capture
             hideCaptureCards: function() {
-                // First, remove all past actions
                 // Note: we can't remove tooltips, so it's just set to nothing
                 this.addTooltipToClass('scp_canCapture', '', '');
                 dojo.query('.scp_canCapture').removeClass('scp_canCapture');

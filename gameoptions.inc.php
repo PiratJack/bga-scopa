@@ -43,8 +43,8 @@ $game_options = [
             SCP_VARIANT_IL_PONINO => [
                 'name' => totranslate('Il Ponino'),
                 'tmdisplay' => totranslate('Variant: Il Ponino'),
-                'description' => totranslate('Capturing all 4 knights doubles the Scopa points'),
-            ],/*
+                'description' => totranslate('Capturing all 4 knights doubles the Scopa points.'),
+            ],
             SCP_VARIANT_NAPOLA => [
                 'name' => totranslate('Napola'),
                 'tmdisplay' => totranslate('Variant: Napola'),
@@ -54,7 +54,7 @@ $game_options = [
                 'name' => totranslate('Scopone'),
                 'tmdisplay' => totranslate('Variant: Scopone'),
                 'description' => totranslate('Played in 2 teams of 2. Starts with 4 cards on table and 9 in player\'s hands.'),
-            ],*/
+            ],
             SCP_VARIANT_SCOPONE_SCIENTIFICO => [
                 'name' => totranslate('Scopone Scientifico'),
                 'tmdisplay' => totranslate('Variant: Scopone Scientifico'),
@@ -78,7 +78,7 @@ $game_options = [
             SCP_VARIANT_RE_BELLO => [
                 'name' => totranslate('Re bello'),
                 'tmdisplay' => totranslate('Variant: Re bello'),
-                'description' => totranslate('The king of coins is worth an extra point'),
+                'description' => totranslate('The king of coins is worth an extra point.'),
             ],
             SCP_VARIANT_SCOPA_A_PERDERE => [
                 'name' => totranslate('Scopa a perdere'),
@@ -92,7 +92,7 @@ $game_options = [
             ],*/
         ],
         'default' => SCP_VARIANT_SCOPA,
-        'startcondition' => [/*
+        'startcondition' => [
             SCP_VARIANT_SCOPONE => [
                 [
                     'type' => 'otheroption',
@@ -110,7 +110,7 @@ $game_options = [
                     'value' => 4,
                     'message' => totranslate('This variant is played only in 2 teams of 2.'),
                 ],
-            ],*/
+            ],
             SCP_VARIANT_SCOPONE_SCIENTIFICO => [
                 [
                     'type' => 'otheroption',

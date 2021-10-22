@@ -230,9 +230,7 @@ class scopa extends Table
         if ($type == 'player') {
             return self::getPlayerNameById($scorer_id);
         } else {
-            if (!isset($this->teams)) {
-                $this->loadTeamsBasicInfos();
-            }
+            $this->loadTeamsBasicInfos();
             return $this->teams[$scorer_id]['team_name'];
         }
     }
@@ -240,13 +238,11 @@ class scopa extends Table
     // Returns data for all teams
     private function loadTeamsBasicInfos($players = [])
     {
-        if (!isset($this->teams)) {
-            if ($players == []) {
-                $sql = 'SELECT player_id, team_id FROM player';
-                $this->players_to_team = self::getCollectionFromDB($sql, true);
-                $players = $this->loadPlayerBasicInfosWithTeam();
-            }
+        if ($players == []) {
+            $players = $this->loadPlayersBasicInfosWithTeam();
+        }
 
+        if (!isset($this->teams)) {
             $this->teams = [];
             for ($team_id = 1; $team_id < (count($players)/2 + 1); $team_id++) {
                 $team_players = array_filter($players, function ($v) use ($team_id) {
@@ -254,7 +250,6 @@ class scopa extends Table
                 });
 
                 $team_players_id = array_keys($team_players);
-                self::dump('$team_players', $team_players);
 
                 $team_name = clienttranslate('Team ${player1} and ${player2}');
                 $team_name = str_replace('${player1}', $team_players[$team_players_id[0]]['player_name'], $team_name);
@@ -270,37 +265,44 @@ class scopa extends Table
         return $this->teams;
     }
 
-    // Returns an array [player_id => team_id]
+    // Returns the ID of the player's team
     private function getPlayerTeam($player_id)
     {
-        if (!isset($this->players_to_team)) {
-            $this->loadTeamsBasicInfos();
-        }
+        $players = $this->loadPlayersBasicInfosWithTeam();
 
-        return $this->players_to_team[$player_id];
-    }
-
-    // Returns the ID of the player's partner
-    private function getPlayerAlly($player_id)
-    {
-        if (!isset($this->players_to_team)) {
-            $this->loadTeamsBasicInfos();
-        }
-
-        $players = $this->teams[$this->players_to_team[$player_id]]['players'];
-        $ally = array_filter($players, function ($v) use ($player_id) {
-            return $v != $player_id;
-        });
-
-        return array_pop($ally);
+        return $players[$player_id]['team_id'];
     }
 
     // Does the same as loadPlayerBasicInfos, with the team_id added
-    private function loadPlayerBasicInfosWithTeam()
+    private function loadPlayersBasicInfosWithTeam()
     {
         $players = self::loadPlayersBasicInfos();
-        foreach ($players as $player_id => $player) {
-            $players[$player_id]['team_id'] = $this->getPlayerTeam($player_id);
+        if ($this->isTeamPlay()) {
+            $sql = 'SELECT player_id, player_score, team_id FROM player';
+            $data = self::getCollectionFromDB($sql);
+            $this->players_to_team = array_map(function ($v) {
+                return $v['team_id'];
+            }, $data);
+            $players_scores = array_map(function ($v) {
+                return $v['player_score'];
+            }, $data);
+
+            $teams = array_fill_keys(array_unique($this->players_to_team), []);
+            foreach ($teams as $team_id => $temp) {
+                $teams[$team_id]['players'] = array_keys(array_filter($this->players_to_team, function ($v) use ($team_id) {
+                    return $v == $team_id;
+                }));
+            }
+
+            foreach ($players as $player_id => $player) {
+                $players[$player_id]['score'] = $players_scores[$player_id];
+                $players[$player_id]['team_id'] = $this->players_to_team[$player_id];
+                $team_players = $teams[$players[$player_id]['team_id']]['players'];
+                $ally = array_filter($team_players, function ($v) use ($player_id) {
+                    return $v != $player_id;
+                });
+                $players[$player_id]['ally'] = array_pop($ally);
+            }
         }
         return $players;
     }
@@ -354,7 +356,7 @@ class scopa extends Table
         self::notifyPlayer(
             $player_id,
             'cardsInHand',
-            'Your cards are: <br />${cards_display}',
+            clienttranslate('Your cards are: <br />${cards_display}'),
             [
                 'cards' => $cards,
                 'cards_display' => $this->cardsToDisplay($cards)
@@ -368,7 +370,7 @@ class scopa extends Table
         $cards = $this->cards->getCardsInLocation('table');
         self::notifyAllPlayers(
             'cardsOnTable',
-            'Cards dealt to the table: <br />${cards_display}',
+            clienttranslate('Cards dealt to the table: <br />${cards_display}'),
             [
                 'cards' => $cards,
                 'cards_display' => $this->cardsToDisplay($cards)
@@ -437,6 +439,7 @@ class scopa extends Table
 
         $win_types = [
             'il_ponino' => clienttranslate('${player_name} captured all knights and marks ${nb_points} points.'),
+            'napola' => clienttranslate('${player_name} captured a series of coin cards and marks ${nb_points} points.'),
         ];
         self::notifyAllPlayers(
             'message',
@@ -734,7 +737,15 @@ class scopa extends Table
         $cards_in_hand = [
             SCP_VARIANT_SCOPA => 3,
             SCP_VARIANT_IL_PONINO => 3,
+            SCP_VARIANT_NAPOLA => 3,
+            SCP_VARIANT_SCOPONE => 9,
             SCP_VARIANT_SCOPONE_SCIENTIFICO => 10,
+            SCP_VARIANT_SCOPA_DI_QUINDICI => 3,
+            SCP_VARIANT_SCOPONE_DE_TRENTE => 9,
+            SCP_VARIANT_ASSO_PIGLIA_TUTTO => 3,
+            SCP_VARIANT_RE_BELLO => 3,
+            SCP_VARIANT_SCOPA_A_PERDERE => 3,
+            SCP_VARIANT_SCOPA_FRAC => 3,
         ][$this->getGameStateValue('game_variant')];
         $players = self::loadPlayersBasicInfos();
         foreach ($players as $player_id => $player) {
@@ -837,11 +848,11 @@ class scopa extends Table
         }
 
         $cards = $this->cards->getCardsInLocation('capture');
-        $players = self::loadPlayerBasicInfosWithTeam();
+        $players = $this->loadPlayersBasicInfosWithTeam();
         $scorers = $players;
 
         if ($this->isTeamPlay()) {
-            $scorers = $this->loadTeamsBasicInfos($players);
+            $scorers = $this->loadTeamsBasicInfos();
 
             foreach ($cards as $card_id => $card) {
                 $cards[$card_id]['location_arg'] = $players[$card['location_arg']]['team_id'];
@@ -882,8 +893,26 @@ class scopa extends Table
         $this->scorePrime($cards, $score_table);
 
         // Score for variants (at least some)
-        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_IL_PONINO) {
-            $this->scoreIlPonino($cards, $score_table);
+        switch ($this->getGameStateValue('game_variant')) {
+            case SCP_VARIANT_IL_PONINO:
+                $this->scoreIlPonino($cards, $score_table);
+                break;
+
+            case SCP_VARIANT_NAPOLA:
+                $this->scoreNapola($cards, $score_table);
+                break;
+
+            case SCP_VARIANT_SCOPONE_DE_TRENTE:
+                $this->scoreScoponeDeTrente($cards, $score_table);
+                break;
+
+            case SCP_VARIANT_RE_BELLO:
+                $this->scoreReBello($cards, $score_table);
+                break;
+
+            case SCP_VARIANT_SCOPA_FRAC:
+                $this->scoreScopaFrac($cards, $score_table);
+                break;
         }
 
         // Get the winners in each category (except scopa & sette bello, already counted)
@@ -967,7 +996,7 @@ class scopa extends Table
     {
         // Scopa score is from DB directly
         if ($this->isTeamPlay()) {
-            $sql = 'SELECT team_id, player_score score, scopa_in_round FROM player';
+            $sql = 'SELECT DISTINCT team_id, player_score score, scopa_in_round FROM player';
         } else {
             $sql = 'SELECT player_id, player_score score, scopa_in_round FROM player';
         }
@@ -1090,6 +1119,60 @@ class scopa extends Table
         $this->playerWinsVariantPoints($playerWithAll, 'il_ponino', $score_table['scopa_number'][$playerWithAll], $score_table);
     }
 
+    // Scores Napola points (= A+2+3 of coin is worth 3, A+2+3+4 worth 4, ...)
+    private function scoreNapola($cards, &$score_table)
+    {
+        $players = array_unique(array_map(function ($v) {
+            return $v['location_arg'];
+        }, $cards));
+        foreach ($players as $player_id) {
+            $coinsCaptured = array_filter($cards, function ($v) use ($player_id) {
+                return $v['location_arg'] == $player_id && $v['type'] == 1;
+            });
+
+            $coinsCaptured = array_values(array_map(function ($v) {
+                return (int)$v['type_arg'];
+            }, $coinsCaptured));
+
+            $max_coin_captured = 0;
+            while (in_array($max_coin_captured+1, $coinsCaptured)) {
+                $max_coin_captured++;
+            }
+
+            if ($max_coin_captured > 0) {
+                break;
+            }
+        }
+
+        if ($max_coin_captured > 2) {
+            $this->playerWinsVariantPoints($player_id, 'napola', $max_coin_captured, $score_table);
+        }
+    }
+
+    // Scores Scopone de Trente points (= A, 2, 3 of coins are worth 1 each, having all coins = victory)
+    private function scoreScoponeDeTrente($cards, &$score_table)
+    {
+        // SCP_VARIANT_SCOPONE_DE_TRENTE: Code scoring function
+
+        //$this->playerWinsVariantPoints($playerWithAll, 'scopone_de_trente', $nb_points, $score_table);
+    }
+
+    // Scores Re bello points (= K of coins is worth 1 point)
+    private function scoreReBello($cards, &$score_table)
+    {
+        // SCP_VARIANT_RE_BELLO: Code scoring function
+
+        //$this->playerWinsVariantPoints($playerWithAll, 're_bello', $nb_points, $score_table);
+    }
+
+    // Scores Scopa Frac points (= J, Kn, K, A worth 1 each. If equality at 8, K of coin wins)
+    private function scoreScopaFrac($cards, &$score_table)
+    {
+        //SCP_VARIANT_SCOPA_FRAC: Code scoring function
+
+        //$this->playerWinsVariantPoints($playerWithAll, 'scopa_frac', $nb_points, $score_table);
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     //////////// Zombie
     ////////////
@@ -1100,7 +1183,7 @@ class scopa extends Table
         $statename = $state['name'];
 
         if ($this->isTeamPlay()) {
-            throw new BgaVisibleSystemException('Zombie mode not supported in team plays, as it would disadvantage one of the teams');
+            throw new BgaVisibleSystemException(self::_('Zombie mode not supported in team plays, as it would disadvantage one of the teams'));
         }
 
         if ('activeplayer' === $state['type']) {
@@ -1134,7 +1217,7 @@ class scopa extends Table
             return;
         }
 
-        throw new BgaVisibleSystemException('Zombie mode not supported at this game state: '.$statename);
+        throw new BgaVisibleSystemException(self::_('Zombie mode not supported at this game state: ').$statename);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////:
@@ -1287,13 +1370,7 @@ class scopa extends Table
         $current_player_id = self::getCurrentPlayerId();
 
         // Get information about players
-        $sql = 'SELECT player_id id, player_score score, team_id FROM player ';
-        $result['players'] = self::getCollectionFromDb($sql);
-        if ($this->isTeamPlay()) {
-            foreach ($result['players'] as $player_id => $player) {
-                $result['players'][$player_id]['ally'] = $this->getPlayerAlly($player_id);
-            }
-        }
+        $result['players'] = $this->loadPlayersBasicInfosWithTeam();
 
         // Material info (used for displaying card labels)
         $result['colors'] = $this->colors;
