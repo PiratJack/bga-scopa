@@ -440,6 +440,7 @@ class scopa extends Table
         $win_types = [
             'il_ponino' => clienttranslate('${player_name} captured all knights and marks ${nb_points} points.'),
             'napola' => clienttranslate('${player_name} captured a series of coin cards and marks ${nb_points} points.'),
+            're_bello' => clienttranslate('${player_name} captured the king of coins and marks a point.'),
         ];
         self::notifyAllPlayers(
             'message',
@@ -1161,8 +1162,12 @@ class scopa extends Table
     private function scoreReBello($cards, &$score_table)
     {
         // SCP_VARIANT_RE_BELLO: Code scoring function
+        $re_bello = array_filter($cards, function ($card) {
+            return $card['type'] == 1 && $card['type_arg'] == 10;
+        });
+        $player_id = array_pop($re_bello)['location_arg'];
 
-        //$this->playerWinsVariantPoints($playerWithAll, 're_bello', $nb_points, $score_table);
+        $this->playerWinsVariantPoints($player_id, 're_bello', 1, $score_table);
     }
 
     // Scores Scopa Frac points (= J, Kn, K, A worth 1 each. If equality at 8, K of coin wins)

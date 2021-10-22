@@ -74,12 +74,12 @@ $game_options = [
                 'name' => totranslate('Acopa d\'Assi / Asso piglia tutto'),
                 'tmdisplay' => totranslate('Variant: Acopa d\'Assi / Asso piglia tutto'),
                 'description' => totranslate('Ace captures all cards on table (and it counts as a scopa).'),
-            ],
+            ],*/
             SCP_VARIANT_RE_BELLO => [
                 'name' => totranslate('Re bello'),
                 'tmdisplay' => totranslate('Variant: Re bello'),
                 'description' => totranslate('The king of coins is worth an extra point.'),
-            ],
+            ],/*
             SCP_VARIANT_SCOPA_A_PERDERE => [
                 'name' => totranslate('Scopa a perdere'),
                 'tmdisplay' => totranslate('Variant: Scopa a perdere'),
