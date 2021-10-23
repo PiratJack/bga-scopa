@@ -77,24 +77,40 @@ class scopa extends Table
             );
         }
 
-        // Remove combinations > 10 points (can't be captured)
-        $combinations = array_filter(
-            $combinations,
-            function ($value) {
-                return $value['total'] <= 10;
-            }
-        );
 
         // Keep only combinations possibles for the player
         $possible_actions = [];
 
-        foreach ($hand as $card_id => $card) {
-            $possible_actions[$card_id] = array_filter(
+        // SCP_VARIANT_ASSO_PIGLIA_TUTTO: Remove this condition (Ace captures all)
+        // In Scopa di Quindici, capture is possible if the sum of cards is 15
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_DI_QUINDICI) {
+            foreach ($hand as $card_id => $card) {
+                $possible_actions[$card_id] = array_filter(
+                    $combinations,
+                    function ($value) use ($card) {
+                        return $value['total'] + $card['type_arg'] == 15;
+                    }
+                );
+            }
+        } else {
+            // Remove combinations > 10 points (can't be captured)
+            $combinations = array_filter(
                 $combinations,
-                function ($value) use ($card) {
-                    return $value['total'] == $card['type_arg'];
+                function ($value) {
+                    return $value['total'] <= 10;
                 }
             );
+
+
+            foreach ($hand as $card_id => $card) {
+                $possible_actions[$card_id] = array_filter(
+                    $combinations,
+                    function ($value) use ($card) {
+                        // SCP_VARIANT_ASSO_PIGLIA_TUTTO: Adapt this condition (Ace captures all)
+                        return $value['total'] == $card['type_arg'];
+                    }
+                );
+            }
         }
 
         // Keep only the combination that has the smallest number of cards
