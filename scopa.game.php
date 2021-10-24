@@ -81,7 +81,6 @@ class scopa extends Table
         // Keep only combinations possibles for the player
         $possible_actions = [];
 
-        // SCP_VARIANT_ASSO_PIGLIA_TUTTO: Remove this condition (Ace captures all)
         // In Scopa di Quindici, capture is possible if the sum of cards is 15
         if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_DI_QUINDICI) {
             foreach ($hand as $card_id => $card) {
@@ -116,7 +115,6 @@ class scopa extends Table
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
                     function ($value) use ($card) {
-                        // SCP_VARIANT_ASSO_PIGLIA_TUTTO: Adapt this condition (Ace captures all)
                         return $value['total'] == $card['type_arg'];
                     }
                 );
@@ -124,6 +122,21 @@ class scopa extends Table
         }
 
         // Keep only the combination that has the smallest number of cards
+        // In Scopa Frac, we can capture as many cards as wanted (not only the minimum number)
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_FRAC) {
+            foreach ($possible_actions as $card_id => $combinations) {
+                // Remove cards that have no combination possible
+                if (0 == count($combinations)) {
+                    unset($possible_actions[$card_id]);
+
+                    continue;
+                }
+                // array_values forces a re-indexing, which means Javascript will see it as an array and not an object
+                $possible_actions[$card_id] = array_values($possible_actions[$card_id]);
+            }
+            return $possible_actions;
+        }
+
         foreach ($possible_actions as $card_id => $combinations) {
             // Remove cards that have no combination possible
             if (0 == count($combinations)) {
@@ -146,7 +159,7 @@ class scopa extends Table
                     array_filter(
                         $combinations,
                         function ($value) use ($min_cards, $hand, $table, $card_id) {
-                            return ($hand[$card_id]['type_arg'] == 1)?$value['size'] == count($table):$value['size'] == $min_cards;
+                            return ($hand[$card_id]['type_arg'] == 1) ? $value['size'] == count($table) : $value['size'] == $min_cards;
                         }
                     )
                 );
@@ -487,6 +500,7 @@ class scopa extends Table
             're_bello' => clienttranslate('${player_name} captured the king of coins and marks a point.'),
             'scopone_de_trente' => clienttranslate('${player_name} captured ${card_captured} of coins and marks ${nb_points} points.'),
             'scopone_de_trente_all' => clienttranslate('${player_name} captured Ace, 2 and 3 of coins - Victory!'),
+            'scopa_frac' => clienttranslate('${player_name} captured ${nb_points} valuable cards and marks ${nb_points} points'),
         ];
         self::notifyAllPlayers(
             'message',
@@ -692,13 +706,16 @@ class scopa extends Table
             );
 
             // Check if Scopa happened
-            if (0 == $this->cards->countCardInLocation('table')) {
-                // If the player is last and it's the last round, no scopa is possible
-                if (0 != $this->cards->countCardInLocation('deck') || 0 != $this->cards->countCardInLocation('hand')) {
-                    if ($this->isTeamPlay()) {
-                        $this->playerWin($this->getPlayerTeam($player_id), 'scopa_number');
-                    } else {
-                        $this->playerWin($player_id, 'scopa_number');
+            // Scopa Frac: no Scopa is possible
+            if ($this->getGameStateValue('game_variant') != SCP_VARIANT_SCOPA_FRAC) {
+                if (0 == $this->cards->countCardInLocation('table')) {
+                    // If the player is last and it's the last round, no scopa is possible
+                    if (0 != $this->cards->countCardInLocation('deck') || 0 != $this->cards->countCardInLocation('hand')) {
+                        if ($this->isTeamPlay()) {
+                            $this->playerWin($this->getPlayerTeam($player_id), 'scopa_number');
+                        } else {
+                            $this->playerWin($player_id, 'scopa_number');
+                        }
                     }
                 }
             }
@@ -934,13 +951,22 @@ class scopa extends Table
         }
 
         // Scoring for regular Scopa game
-        $this->scoreScopa($cards, $score_table);
-        $this->scoreSetteBello($cards, $score_table);
-        $this->scoreCardsCaptured($cards, $score_table);
-        $this->scoreCoinsCaptured($cards, $score_table);
-        $this->scorePrime($cards, $score_table);
+        // Scopa Frac: only points from variants are counted
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_FRAC) {
+            unset($scoring_rows['scopa_number']);
+            unset($scoring_rows['sette_bello']);
+            unset($scoring_rows['cards_captured']);
+            unset($scoring_rows['coins_captured']);
+            unset($scoring_rows['prime_score']);
+        } else {
+            $this->scoreScopa($cards, $score_table);
+            $this->scoreSetteBello($cards, $score_table);
+            $this->scoreCardsCaptured($cards, $score_table);
+            $this->scoreCoinsCaptured($cards, $score_table);
+            $this->scorePrime($cards, $score_table);
+        }
 
-        // Score for variants (at least some)
+        // Score for variants
         switch ($this->getGameStateValue('game_variant')) {
             case SCP_VARIANT_IL_PONINO:
                 $this->scoreIlPonino($cards, $score_table);
@@ -963,21 +989,24 @@ class scopa extends Table
                 break;
         }
 
-        // Get the winners in each category (except scopa & sette bello, already counted)
-        $categories = ['cards_captured', 'coins_captured', 'prime_score'];
-        foreach ($categories as $category) {
-            $high_score = max($score_table[$category]);
-            $winners = array_filter(
-                $score_table[$category],
-                function ($val) use ($high_score) {
-                    return $val == $high_score;
+        // Scopa frac: you can't win points that way
+        if ($this->getGameStateValue('game_variant') != SCP_VARIANT_SCOPA_FRAC) {
+            // Get the winners in each category (except scopa & sette bello, already counted)
+            $categories = ['cards_captured', 'coins_captured', 'prime_score'];
+            foreach ($categories as $category) {
+                $high_score = max($score_table[$category]);
+                $winners = array_filter(
+                    $score_table[$category],
+                    function ($val) use ($high_score) {
+                        return $val == $high_score;
+                    }
+                );
+                if (1 == count($winners)) {
+                    // We have a unique winner!
+                    $this->playerWin(array_keys($winners)[0], $category, $score_table);
+                } else {
+                    $this->playerTie($category);
                 }
-            );
-            if (1 == count($winners)) {
-                // We have a unique winner!
-                $this->playerWin(array_keys($winners)[0], $category, $score_table);
-            } else {
-                $this->playerTie($category);
             }
         }
 
@@ -1204,7 +1233,7 @@ class scopa extends Table
             return $card['type'] == 1 && in_array($card['type_arg'], [1, 2, 3]);
         }));
         uasort($coin_cards, function ($a, $b) {
-            return ($a['type_arg'] < $b['type_arg'])?-1:1;
+            return ($a['type_arg'] < $b['type_arg']) ? -1 : 1;
         });
 
         $teamWithAll = $coin_cards[0]['location_arg'];
@@ -1224,7 +1253,6 @@ class scopa extends Table
     // Scores Re bello points (= K of coins is worth 1 point)
     private function scoreReBello($cards, &$score_table)
     {
-        // SCP_VARIANT_RE_BELLO: Code scoring function
         $re_bello = array_filter($cards, function ($card) {
             return $card['type'] == 1 && $card['type_arg'] == 10;
         });
@@ -1236,9 +1264,20 @@ class scopa extends Table
     // Scores Scopa Frac points (= J, Kn, K, A worth 1 each. If equality at 8, K of coin wins)
     private function scoreScopaFrac($cards, &$score_table)
     {
-        //SCP_VARIANT_SCOPA_FRAC: Code scoring function
+        $cardsWorthPoints = array_filter($cards, function ($card) {
+            return in_array($card['type_arg'], [1, 8, 9, 10]);
+        });
 
-        //$this->playerWinsVariantPoints($playerWithAll, 'scopa_frac', $nb_points, $score_table);
+        $players = array_unique(array_map(function ($v) {
+            return $v['location_arg'];
+        }, $cardsWorthPoints));
+
+        foreach ($players as $player_id) {
+            $cardsCaptured = array_filter($cardsWorthPoints, function ($card) use ($player_id) {
+                return $card['location_arg'] == $player_id;
+            });
+            $this->playerWinsVariantPoints($player_id, 'scopa_frac', count($cardsCaptured), $score_table);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////////

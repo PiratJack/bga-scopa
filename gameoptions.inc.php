@@ -84,12 +84,12 @@ $game_options = [
                 'name' => totranslate('Scopa a perdere'),
                 'tmdisplay' => totranslate('Variant: Scopa a perdere'),
                 'description' => totranslate('The goal is to mark as little points as possible. First to reach the target (normally 21) loses.'),
-            ],
+            ],*/
             SCP_VARIANT_SCOPA_FRAC => [
                 'name' => totranslate('Scopa Frac'),
                 'tmdisplay' => totranslate('Variant: Scopa Frac'),
                 'description' => totranslate('Aces, Jacks, Knights and Kings are each worth 1 point. This is the only way to mark points. In case of equality, the winner is who captured the King of coins. If a player can capture 1 or multiple cards, he can choose to capture multiple cards.'),
-            ],*/
+            ],
         ],
         'default' => SCP_VARIANT_SCOPA,
         'startcondition' => [
@@ -151,6 +151,14 @@ $game_options = [
                     'type' => 'maxplayers',
                     'value' => 4,
                     'message' => totranslate('This variant is played only in 2 teams of 2.'),
+                ],
+            ],
+            SCP_VARIANT_SCOPA_FRAC => [
+                [
+                    'type' => 'otheroption',
+                    'id' => SCP_OPTION_MAX_CAPTURE,
+                    'value' => SCP_OPTION_MAX_CAPTURE_ANY,
+                    'message' => totranslate('In this variant, there is no limit to the number of cards to capture.'),
                 ],
             ],
         ],
