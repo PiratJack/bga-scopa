@@ -69,12 +69,12 @@ $game_options = [
                 'name' => totranslate('Scopone de Trente'),
                 'tmdisplay' => totranslate('Variant: Scopone de Trente'),
                 'description' => totranslate('Played in 2 teams of 2 and with target of 21 points. Ace, 2 and 3 of coins are worth 1, 2 and 3 extra points. Capturing all three means immediate victory.'),
-            ],/*
+            ],
             SCP_VARIANT_ASSO_PIGLIA_TUTTO => [
                 'name' => totranslate('Acopa d\'Assi / Asso piglia tutto'),
                 'tmdisplay' => totranslate('Variant: Acopa d\'Assi / Asso piglia tutto'),
                 'description' => totranslate('Ace captures all cards on table (and it counts as a scopa).'),
-            ],*/
+            ],
             SCP_VARIANT_RE_BELLO => [
                 'name' => totranslate('Re bello'),
                 'tmdisplay' => totranslate('Variant: Re bello'),

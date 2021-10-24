@@ -92,6 +92,16 @@ class scopa extends Table
                     }
                 );
             }
+        } // In Asso piglia tutto, Aces capture everything
+        elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO) {
+            foreach ($hand as $card_id => $card) {
+                $possible_actions[$card_id] = array_filter(
+                    $combinations,
+                    function ($value) use ($card) {
+                        return ($value['total'] == $card['type_arg']) || $card['type_arg'] == 1;
+                    }
+                );
+            }
         } else {
             // Remove combinations > 10 points (can't be captured)
             $combinations = array_filter(
@@ -130,14 +140,26 @@ class scopa extends Table
                 )
             );
             // array_values forces a re-indexing, which means Javascript will see it as an array and not an object
-            $possible_actions[$card_id] = array_values(
-                array_filter(
-                    $combinations,
-                    function ($value) use ($min_cards) {
-                        return $value['size'] == $min_cards;
-                    }
-                )
-            );
+            // In Asso piglia tutto, Aces capture everything
+            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO) {
+                $possible_actions[$card_id] = array_values(
+                    array_filter(
+                        $combinations,
+                        function ($value) use ($min_cards, $hand, $table, $card_id) {
+                            return ($hand[$card_id]['type_arg'] == 1)?$value['size'] == count($table):$value['size'] == $min_cards;
+                        }
+                    )
+                );
+            } else {
+                $possible_actions[$card_id] = array_values(
+                    array_filter(
+                        $combinations,
+                        function ($value) use ($min_cards) {
+                            return $value['size'] == $min_cards;
+                        }
+                    )
+                );
+            }
         }
 
         return $possible_actions;
@@ -1182,7 +1204,7 @@ class scopa extends Table
             return $card['type'] == 1 && in_array($card['type_arg'], [1, 2, 3]);
         }));
         uasort($coin_cards, function ($a, $b) {
-            return ($a['type_arg'] < $b['type_arg']) ? -1 : 1;
+            return ($a['type_arg'] < $b['type_arg'])?-1:1;
         });
 
         $teamWithAll = $coin_cards[0]['location_arg'];
