@@ -319,6 +319,12 @@ class scopa extends Table
                 });
                 $players[$player_id]['ally'] = array_pop($ally);
             }
+        } else {
+            $sql = 'SELECT player_id, player_score FROM player';
+            $data = self::getCollectionFromDB($sql, true);
+            foreach ($data as $player_id => $score) {
+                $players[$player_id]['score'] = $score;
+            }
         }
         return $players;
     }
@@ -445,7 +451,7 @@ class scopa extends Table
     }
 
     // A player wins points for variants: update DB & notify, but no statistic
-    private function playerWinsVariantPoints($scorer_id, $win_type, $nb_points, &$scoring_table)
+    private function playerWinsVariantPoints($scorer_id, $win_type, $nb_points, &$scoring_table, $card_captured = '')
     {
         // Define who scored - team or player + their name (for notifications purpose)
         $scorer_type = $this->isTeamPlay() ? 'team' : 'player';
@@ -457,6 +463,8 @@ class scopa extends Table
             'il_ponino' => clienttranslate('${player_name} captured all knights and marks ${nb_points} points.'),
             'napola' => clienttranslate('${player_name} captured a series of coin cards and marks ${nb_points} points.'),
             're_bello' => clienttranslate('${player_name} captured the king of coins and marks a point.'),
+            'scopone_de_trente' => clienttranslate('${player_name} captured ${card_captured} of coins and marks ${nb_points} points.'),
+            'scopone_de_trente_all' => clienttranslate('${player_name} captured Ace, 2 and 3 of coins - Victory!'),
         ];
         self::notifyAllPlayers(
             'message',
@@ -464,6 +472,7 @@ class scopa extends Table
             [
                 'player_name' => $scorer_name,  // called "player_name" so that JS colors the names
                 'nb_points' => $nb_points,
+                'card_captured' => $card_captured,
             ]
         );
 
@@ -894,7 +903,7 @@ class scopa extends Table
         }
 
         // For regular scopa, remove the "variant" row
-        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA) {
+        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA, SCP_VARIANT_SCOPONE, SCP_VARIANT_SCOPONE_SCIENTIFICO, SCP_VARIANT_SCOPA_DI_QUINDICI, SCP_VARIANT_ASSO_PIGLIA_TUTTO])) {
             unset($scoring_rows['variant']);
         } else {
             $game_options = $this->getTableOptions();
@@ -1169,9 +1178,25 @@ class scopa extends Table
     // Scores Scopone de Trente points (= A, 2, 3 of coins are worth 1 each, having all coins = victory)
     private function scoreScoponeDeTrente($cards, &$score_table)
     {
-        // SCP_VARIANT_SCOPONE_DE_TRENTE: Code scoring function
+        $coin_cards = array_values(array_filter($cards, function ($card) {
+            return $card['type'] == 1 && in_array($card['type_arg'], [1, 2, 3]);
+        }));
+        uasort($coin_cards, function ($a, $b) {
+            return ($a['type_arg'] < $b['type_arg']) ? -1 : 1;
+        });
 
-        //$this->playerWinsVariantPoints($playerWithAll, 'scopone_de_trente', $nb_points, $score_table);
+        $teamWithAll = $coin_cards[0]['location_arg'];
+        foreach ($coin_cards as $card) {
+            if ($card['location_arg'] != $teamWithAll) {
+                $teamWithAll = 0;
+            }
+            // Each of A, 2 and 3 of coin is worth 1, 2 or 3 points
+            $this->playerWinsVariantPoints($card['location_arg'], 'scopone_de_trente', (int)$card['type_arg'], $score_table, $this->values_label[$card['type_arg']]);
+        }
+        // The team with all 3 wins
+        if ($teamWithAll != 0) {
+            $this->playerWinsVariantPoints($teamWithAll, 'scopone_de_trente_all', 100, $score_table);
+        }
     }
 
     // Scores Re bello points (= K of coins is worth 1 point)

@@ -64,12 +64,12 @@ $game_options = [
                 'name' => totranslate('Scopa di Quindici'),
                 'tmdisplay' => totranslate('Variant: Scopa di Quindici'),
                 'description' => totranslate('Capturing cards is possible only if the sum of cards equals 15. Examples: 7 captures 8, King takes 5 or Ace + 4.'),
-            ],/*
+            ],
             SCP_VARIANT_SCOPONE_DE_TRENTE => [
                 'name' => totranslate('Scopone de Trente'),
                 'tmdisplay' => totranslate('Variant: Scopone de Trente'),
                 'description' => totranslate('Played in 2 teams of 2 and with target of 21 points. Ace, 2 and 3 of coins are worth 1, 2 and 3 extra points. Capturing all three means immediate victory.'),
-            ],
+            ],/*
             SCP_VARIANT_ASSO_PIGLIA_TUTTO => [
                 'name' => totranslate('Acopa d\'Assi / Asso piglia tutto'),
                 'tmdisplay' => totranslate('Variant: Acopa d\'Assi / Asso piglia tutto'),
@@ -128,7 +128,7 @@ $game_options = [
                     'value' => 4,
                     'message' => totranslate('This variant is played only in 2 teams of 2.'),
                 ],
-            ],/*
+            ],
             SCP_VARIANT_SCOPONE_DE_TRENTE => [
                 [
                     'type' => 'otheroption',
@@ -152,7 +152,7 @@ $game_options = [
                     'value' => 4,
                     'message' => totranslate('This variant is played only in 2 teams of 2.'),
                 ],
-            ],*/
+            ],
         ],
     ],
     SCP_TEAM_PLAY => [
