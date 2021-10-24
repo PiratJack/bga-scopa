@@ -1060,6 +1060,11 @@ class scopa extends Table
             $this->gamestate->nextState('dealStart');
         } else {
             // We have a winner!
+            // For Scopa a perdere, invert the scores so that winner has the highest one
+            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_A_PERDERE) {
+                self::DbQuery('UPDATE player SET player_score = -player_score');
+            }
+
             $this->gamestate->nextState('gameEnd');
         }
     }

@@ -79,12 +79,12 @@ $game_options = [
                 'name' => totranslate('Re bello'),
                 'tmdisplay' => totranslate('Variant: Re bello'),
                 'description' => totranslate('The king of coins is worth an extra point.'),
-            ],/*
+            ],
             SCP_VARIANT_SCOPA_A_PERDERE => [
                 'name' => totranslate('Scopa a perdere'),
                 'tmdisplay' => totranslate('Variant: Scopa a perdere'),
                 'description' => totranslate('The goal is to mark as little points as possible. First to reach the target (normally 21) loses.'),
-            ],*/
+            ],
             SCP_VARIANT_SCOPA_FRAC => [
                 'name' => totranslate('Scopa Frac'),
                 'tmdisplay' => totranslate('Variant: Scopa Frac'),
