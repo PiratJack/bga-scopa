@@ -951,6 +951,7 @@ class scopa extends Table
         }
 
         // Scoring for regular Scopa game
+        $this->scoreScopa($cards, $score_table);
         // Scopa Frac: only points from variants are counted
         if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_FRAC) {
             unset($scoring_rows['scopa_number']);
@@ -959,7 +960,6 @@ class scopa extends Table
             unset($scoring_rows['coins_captured']);
             unset($scoring_rows['prime_score']);
         } else {
-            $this->scoreScopa($cards, $score_table);
             $this->scoreSetteBello($cards, $score_table);
             $this->scoreCardsCaptured($cards, $score_table);
             $this->scoreCoinsCaptured($cards, $score_table);
