@@ -329,13 +329,10 @@ class scopa extends Table
     {
         $players = self::loadPlayersBasicInfos();
         if ($this->isTeamPlay()) {
-            $sql = 'SELECT player_id, player_score, team_id FROM player';
+            $sql = 'SELECT player_id, player_score, team_id, scopa_in_round FROM player';
             $data = self::getCollectionFromDB($sql);
             $this->players_to_team = array_map(function ($v) {
                 return $v['team_id'];
-            }, $data);
-            $players_scores = array_map(function ($v) {
-                return $v['player_score'];
             }, $data);
 
             $teams = array_fill_keys(array_unique($this->players_to_team), []);
@@ -346,7 +343,8 @@ class scopa extends Table
             }
 
             foreach ($players as $player_id => $player) {
-                $players[$player_id]['score'] = $players_scores[$player_id];
+                $players[$player_id]['score'] = $data[$player_id]['player_score'];
+                $players[$player_id]['scopa_in_round'] = $data[$player_id]['scopa_in_round'];
                 $players[$player_id]['team_id'] = $this->players_to_team[$player_id];
                 $team_players = $teams[$players[$player_id]['team_id']]['players'];
                 $ally = array_filter($team_players, function ($v) use ($player_id) {
@@ -355,10 +353,11 @@ class scopa extends Table
                 $players[$player_id]['ally'] = array_pop($ally);
             }
         } else {
-            $sql = 'SELECT player_id, player_score FROM player';
-            $data = self::getCollectionFromDB($sql, true);
-            foreach ($data as $player_id => $score) {
-                $players[$player_id]['score'] = $score;
+            $sql = 'SELECT player_id, player_score, scopa_in_round FROM player';
+            $data = self::getCollectionFromDB($sql);
+            foreach ($data as $player_id => $info) {
+                $players[$player_id]['score'] = $info['player_score'];
+                $players[$player_id]['scopa_in_round'] = $info['scopa_in_round'];
             }
         }
         return $players;
@@ -438,8 +437,8 @@ class scopa extends Table
     // Updates player's scores
     private function notif_playerScores()
     {
-        $sql = 'SELECT player_id, player_score FROM player';
-        $data = self::getCollectionFromDb($sql, true);
+        $sql = 'SELECT player_id, player_score, scopa_in_round FROM player';
+        $data = self::getCollectionFromDb($sql);
         self::notifyAllPlayers('playerScores', '', ['score' => $data]);
     }
 

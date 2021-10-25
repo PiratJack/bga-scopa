@@ -25,6 +25,10 @@ define([
                 this.cardwidth = 68;
                 this.cardheight = 111;
 
+                if (window.matchMedia("(min-width: 1360px)").matches) {
+                    this.cardwidth = 100;
+                    this.cardheight = 165;
+                }
                 if (window.matchMedia("(min-width: 1720px)").matches) {
                     this.cardwidth = 132;
                     this.cardheight = 219;
@@ -41,28 +45,30 @@ define([
                 // Setting up player boards
                 for (var playerId in gamedatas.players) {
                     var player = gamedatas.players[playerId];
+                    var player_board_div = $('player_board_' + playerId);
 
-                    // Not a team game
-                    if (typeof gamedatas.players[playerId].team_id == 'undefined') {
-                        // Setting up players boards
-                        var player_board_div = $('player_board_' + playerId);
-                        dojo.place(this.format_block('jstpl_player_board', {
-                            player_id: playerId,
-                            card_count: gamedatas.players_hand[playerId],
-                            ally_name: '',
-                        }), player_board_div);
-                    } else {
-                        // Setting up players boards
-                        var player_board_div = $('player_board_' + playerId);
+                    if (typeof gamedatas.players[playerId].team_id == 'undefined')
+                        var ally_name = '';
+                    else {
                         var ally_id = gamedatas.players[playerId].ally;
-                        dojo.place(this.format_block('jstpl_player_board', {
-                            player_id: playerId,
-                            card_count: gamedatas.players_hand[playerId],
-                            ally_name: gamedatas.players[ally_id].name,
-                        }), player_board_div);
+                        var ally_name = gamedatas.players[ally_id].name;
+                    }
 
+                    // Set up player board
+                    dojo.place(this.format_block('jstpl_player_board', {
+                        player_id: playerId,
+                        card_count: gamedatas.players_hand[playerId],
+                        ally_name: ally_name,
+                        scopa_in_round: player.scopa_in_round,
+                    }), player_board_div);
+
+                    this.addTooltip('cp_deck_' + playerId, _('Cards left in hand'), '')
+                    this.addTooltip('scp_scopa_points_' + playerId, _('Scopa points marked during this round'), '')
+
+                    // Team game
+                    if (typeof gamedatas.players[playerId].team_id != 'undefined') {
                         var tooltipText = dojo.string.substitute(_("This player plays with ${ally_name}"), {
-                            ally_name: gamedatas.players[ally_id].name,
+                            ally_name: ally_name,
                         });
                         this.addTooltip('cp_team_' + playerId, tooltipText, '')
                     }
@@ -118,7 +124,7 @@ define([
                 // Setup game notifications to handle
                 this.setupNotifications();
 
-                // Initialize array for captures & hide capture choices
+                // Initialize captures & hide capture choices
                 this.cardCaptures = [];
                 var fadeCapture = dojo.fadeOut({
                     node: 'capturechoice',
@@ -626,8 +632,9 @@ define([
             // Notify about scores
             notif_playerScores: function(notif) {
                 for (var playerId in notif.args.score) {
-                    var newScore = notif.args.score[playerId];
-                    this.scoreCtrl[playerId].toValue(newScore);
+                    var scoreData = notif.args.score[playerId];
+                    this.scoreCtrl[playerId].toValue(scoreData.player_score);
+                    $('scp_scopa_points_' + playerId).innerHTML = scoreData.scopa_in_round;
                 }
             },
         });
