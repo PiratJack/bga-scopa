@@ -44,3 +44,29 @@ $this->prime_points = [
     9 => 10,
     10 => 10,
 ];
+
+// Defines where players are seated
+// Structure: count_total_players => [ player_order => position]
+// player_order being 0 for active player, 1 for next player, ...
+// Reminder: Scopa is played counter-clockwise
+$this->seat_positions = [
+    6 => [
+        1 => 'bottom_right',
+        2 => 'right',
+        3 => 'top_right',
+        4 => 'top_left',
+        5 => 'left',
+    ],
+    4 => [
+        1 => 'bottom_right',
+        2 => 'top_right',
+        3 => 'top_left',
+    ],
+    3 => [
+        1 => 'top_right',
+        2 => 'top_left',
+    ],
+    2 => [
+        1 => 'top_left',
+    ],
+];

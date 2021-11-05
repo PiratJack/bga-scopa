@@ -325,7 +325,7 @@ class scopa extends Table
     }
 
     // Does the same as loadPlayerBasicInfos, with the team_id added
-    private function loadPlayersBasicInfosWithTeam()
+    public function loadPlayersBasicInfosWithTeam()
     {
         $players = self::loadPlayersBasicInfos();
         if ($this->isTeamPlay()) {
@@ -360,6 +360,19 @@ class scopa extends Table
                 $players[$player_id]['scopa_in_round'] = $info['scopa_in_round'];
             }
         }
+
+        // Define player's seat position
+        $player_order = $this->getNextPlayerTable();
+        $active_player = $this->getCurrentPlayerId();
+        $player_pointer = $player_order[$active_player];
+        $order = 1;
+        $seat_position = $this->seat_positions[count($players)];
+        while ($active_player != $player_pointer) {
+            $players[$player_pointer]['seat_position'] = $seat_position[$order];
+            $order++;
+            $player_pointer = $player_order[$player_pointer];
+        }
+
         return $players;
     }
 

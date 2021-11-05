@@ -50,4 +50,8 @@ if (!defined('SCP_VARIANT_SCOPA')) {
     define('SCP_PREF_AUTO_PLAY', 102);
     define('SCP_PREF_AUTO_PLAY_YES', 1);
     define('SCP_PREF_AUTO_PLAY_NO', 2);
+
+    define('SCP_PREF_DISPLAY_PLAYERS', 103);
+    define('SCP_PREF_DISPLAY_PLAYERS_YES', 1);
+    define('SCP_PREF_DISPLAY_PLAYERS_NO', 2);
 }

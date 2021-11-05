@@ -178,11 +178,10 @@ $game_options = [
         'displaycondition' => [
             [
                 'type' => 'minplayers',
-                'value' => 4,
+                'value' => [4, 6],
             ],
         ],
         'notdisplayedmessage' => totranslate('Playing in teams is possible only with 4 or 6 players.'),
-        'displayconditionoperand' => 'and',
         'default' => SCP_TEAM_PLAY_NO,
     ],
 ];
@@ -215,5 +214,14 @@ $game_preferences = [
             SCP_PREF_AUTO_PLAY_NO => [ 'name' => totranslate('No') ]
         ],
         'default' => SCP_PREF_AUTO_PLAY_NO
+    ],
+    SCP_PREF_DISPLAY_PLAYERS => [
+        'name' => totranslate('Display other players?'),
+        'needReload' => false, // Handled through JS directly
+        'values' => [
+            SCP_PREF_DISPLAY_PLAYERS_YES => [ 'name' => totranslate('Yes') ],
+            SCP_PREF_DISPLAY_PLAYERS_NO => [ 'name' => totranslate('No') ]
+        ],
+        'default' => SCP_PREF_DISPLAY_PLAYERS_NO
     ],
 ];

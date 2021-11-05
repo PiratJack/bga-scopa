@@ -8,66 +8,24 @@
  * -----
  */
 
+
+/****************** Colors, alignment and pictures ******************/
+
 /* Main board */
 #scp_board {
-    min-width: 800px;
-    width: min-content;
     margin-left: auto;
     margin-right: auto;
-}
 
-
-/* All card holders */
-.scp_cardholder {
     text-align: center;
-    min-width: 120px;
-    min-height: 150px;
-}
 
-/****************** Cards on table ******************/
-#tablehand {
-    width: min-content;
-    float: left;
-    margin-top: 0px;
-}
-
-/****************** Card played & deck ******************/
-#interactions {
-    float: right;
-    width: 300px;
-    /* 120 (big enough text) * 2 + 20 padding  */
-    margin-top: 0;
-}
-
-@media only screen and (max-width: 1100px) {
-
-    /* Move them so they're within the screen */
-    #interactions {
-        float: none;
-        clear: both;
-    }
-}
-
-#cardplayed,
-#deck {
-    display: inline-block;
-    margin-top: 0px;
+    position: relative;
+    /* This is to position other elements */
 }
 
 /* Hide the played card by default (it'll get filled by JS) */
-#cardplayedcard {
+#scp_cardplayedcard {
     background-image: none !important;
-}
-
-#deck {
-    float: right;
-}
-
-/****************** Capture choices ******************/
-#capturechoice {
-    width: min-content;
-    min-width: 380px;
-    float: left;
+    box-shadow: none;
 }
 
 /* Group of cards to capture */
@@ -79,19 +37,12 @@
     margin-right: 10px;
 }
 
-
-/****************** Player's hand ******************/
-#myhand {
-    width: min-content;
-    clear: both;
-}
-
-#myhandcards {
+#scp_myhandcards {
     /* This allows Dojo to position cards properly during animations */
     text-align: initial;
 }
 
-.spectatorMode #myhand {
+.spectatorMode #scp_myhand {
     display: none;
 }
 
@@ -101,20 +52,24 @@
     border-right: 2px black dotted !important;
 }
 
-/****************** Cards and decks ******************/
-.scp_card,
-.scp_deck {
-    display: inline-block;
-    position: relative;
-    width: 68px;
-    height: 111px;
-}
-
+/* Cards and decks */
 .scp_card,
 .scp_deck,
 .stockitem {
+    width: 68px;
+    height: 111px;
+
+    margin-left: auto;
+    margin-right: auto;
+
     border-radius: 10px;
     box-shadow: 3px 3px 3px #000000a0;
+}
+
+.scp_card,
+.scp_deck {
+    position: relative;
+    /* This ensures the card label stays on the card itself */
 }
 
 /* Cards (except player's card) */
@@ -131,25 +86,10 @@
     background-image: url('img/cards_italian.jpg') !important;
 }
 
-/* Hide shadow in "card played" box */
-#cardplayedcard {
-    box-shadow: none;
-}
-
 /* Card in capture group */
 .scp_capturegroup .scp_card {
     margin-right: 10px;
-}
-
-.scp_card_label {
-    min-height: 30px;
-    background: #c0c0c0e0;
-    position: absolute;
-    bottom: 10px;
-    width: 100%;
-    line-height: 30px;
-    font-style: italic;
-    text-align: center;
+    display: inline-block;
 }
 
 /* Deck of cards */
@@ -162,25 +102,42 @@
     text-shadow: 0 0 6px #000;
 }
 
+.scp_card_label {
+    min-height: 30px;
+    background: #c0c0c0e0;
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    line-height: 30px;
+    font-style: italic;
+    text-align: center;
+
+    /* The below cancel .scp_deck (used in player seats) */
+    color: black;
+    text-shadow: none;
+    font-weight: normal;
+}
+
+#scp_deck .scp_deck {
+    font-size: 28px;
+}
+
 .player_board_content .scp_deck {
-    width: 25px;
-    height: 41px;
-    line-height: 41px;
+    width: 25px !important;
+    height: 41px !important;
+    line-height: 41px !important;
     font-size: 20px;
+
+    display: inline-block;
+    margin: 0;
+    margin-left: 3px;
 }
 
 .player_board_content .scp_scopa_points {
-    margin-left: 10px;
+    margin-left: 8px;
     background-position: 50% 0;
     color: black;
     text-shadow: 0 0 10px white;
-}
-
-#deck .scp_deck {
-    width: 68px;
-    height: 111px;
-    line-height: 111px;
-    font-size: 28px;
 }
 
 .scp_hidden {
@@ -191,7 +148,6 @@
 .stockitem {
     background-size: 1000% 400%;
 }
-
 
 .player_board_content .scp_team {
     display: inline-block;
@@ -216,81 +172,304 @@
 }
 
 
-/****************** Change card and deck sizes based on screen size ******************/
+/****************** Position of main elements ******************/
 
-@media only screen and (min-width: 1360px) {
+#scp_table {
+    float: left;
+    margin: 0;
+}
 
+/*** Player seats ***/
+
+.scp_player_seat,
+#scp_myhand,
+#scp_capturechoice,
+#scp_cardplayed {
+    float: left;
+    margin: 0;
+}
+
+.scp_player_seat_top_left {
+    margin-bottom: 10px;
+}
+
+.scp_player_seat_top_right {
+    float: right;
+    margin-bottom: 10px;
+}
+
+.scp_player_seat_right {
+    float: right;
+    margin-top: var(--grid_height);
+    margin-left: 10px;
+}
+
+.scp_player_seat_left {
+    margin-top: var(--grid_height);
+    margin-right: 10px;
+}
+
+.scp_player_seat_bottom_right {
+    float: right;
+    margin-right: var(--grid_width);
+    margin-top: 10px;
+}
+
+#scp_myhand {
+    margin-top: 10px;
+}
+
+
+/*** Players are visible ***/
+
+.scp_players_visible #scp_myhand,
+.scp_players_visible #scp_capturechoice {
+    margin-left: var(--grid_width);
+    margin-top: 10px;
+}
+
+.scp_players_visible #scp_deck {
+    margin-top: 0px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.scp_players_visible #scp_cardplayed {
+    display: none;
+}
+
+/*** Players are hidden ***/
+
+.scp_players_hidden #scp_deck {
+    margin-top: 0px;
+    float: right;
+}
+
+.scp_players_hidden #scp_cardplayed {
+    float: right;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.scp_players_hidden .scp_player_seat {
+    display: none;
+}
+
+
+
+/****************** Sizes definitions ******************/
+
+/** Based on player visibility **/
+.scp_players_hidden,
+.scp_players_visible {
+    --board-width_s: 800px;
+    --board-width_m: 1080px;
+    --board-width_l: 1650px;
+}
+
+.scp_players_hidden {
+    --card_width_s: 68px;
+    --card_height_s: 111px;
+    --cardholder_width_s: 120px;
+    /* big enough for the text */
+    --cardholder_height_s: 150px;
+    --table_width_s: 460px;
+    --myhand_width_s: 780px;
+    /* Full width minus padding */
+    --grid_width_s: 150px;
+    /* width of player seat + margins */
+    --grid_height_s: 190px;
+    /* Height of table + margins + paddings */
+
+    --card_width_m: 100px;
+    --card_height_m: 165px;
+    --cardholder_width_m: 120px;
+    --cardholder_height_m: 205px;
+    --table_width_m: 750px;
+    --myhand_width_m: 1060px;
+    /* Full width minus padding */
+    --grid_width_m: 150px;
+    /* width of player seat + margins */
+    --grid_height_m: 245px;
+    /* Height of table + margins + paddings */
+
+    --card_width_l: 132px;
+    --card_height_l: 219px;
+    --cardholder_width_l: 152px;
+    --cardholder_height_l: 260px;
+    --table_width_l: 1100px;
+    --myhand_width_l: 1630px;
+    /* Full width minus padding */
+    --grid_width_l: 180px;
+    /* width of player seat + margins */
+    --grid_height_l: 300px;
+    /* Height of table + margins + paddings */
+}
+
+.scp_players_visible {
+    --card_width_s: 68px;
+    --card_height_s: 111px;
+    --cardholder_width_s: 120px;
+    /* big enough for the text */
+    --cardholder_height_s: 150px;
+    --table_width_s: 480px;
+    --myhand_width_s: 330px;
+    /* Table width minus player seat (= grid width) */
+    --grid_width_s: 150px;
+    /* width of player seat + margins */
+    --grid_height_s: 180px;
+    /* Height of table + margins + paddings */
+
+    --card_width_m: 68px;
+    --card_height_m: 111px;
+    --cardholder_width_m: 120px;
+    /* big enough for the text */
+    --cardholder_height_m: 150px;
+    --table_width_m: 760px;
+    --myhand_width_m: 610px;
+    /* Table width minus player seat (= grid width) */
+    --grid_width_m: 150px;
+    /* width of player seat + margins */
+    --grid_height_m: 180px;
+    /* Height of table + margins + paddings */
+
+    --card_width_l: 100px;
+    --card_height_l: 165px;
+    --cardholder_width_l: 120px;
+    --cardholder_height_l: 205px;
+    --table_width_l: 1330px;
+    --myhand_width_l: 1180px;
+    /* Table width minus player seat (= grid width) */
+    --grid_width_l: 150px;
+    /* width of player seat + margins */
+    --grid_height_l: 235px;
+    /* Height of table + margins + paddings */
+}
+
+
+/** Based on screen resolution **/
+
+/** Special rules for very small screens **/
+@media only screen and (max-width: 1030px) {
     #scp_board {
-        min-width: 1100px;
+        width: 100% !important;
     }
 
-    /* All card holders */
-    .scp_cardholder {
-        min-width: 110px;
-        /* card + 10 padding */
-        min-height: 205px;
+    .scp_player_seat {
+        display: none;
     }
 
-    /****************** Card played & deck ******************/
-    #interactions {
-        width: 280px;
-        /* (card + 20 padding) * 2 + 20 padding */
+    /** All elements take the full width **/
+    #scp_table,
+    #scp_myhand {
+        width: auto !important;
+        float: none;
+        clear: both;
+        margin-bottom: 10px;
+        margin-left: 0 !important;
     }
 
-    #capturechoice {
-        min-width: 530px;
+    #scp_myhand {}
+
+    #scp_deck,
+    #scp_cardplayed {
+        display: inherit !important;
+        float: left !important;
     }
 
-    #deck .scp_deck {
-        line-height: 165px;
+    #scp_cardplayed {
+        margin-left: 10px;
     }
+}
 
+@media only screen and (max-width: 1350px) {
 
+    .scp_players_hidden,
+    .scp_players_visible {
+        --board-width: var(--board-width_s);
 
-    /****************** Cards and decks ******************/
-    .scp_card,
-    .scp_deck,
-    #deck .scp_deck {
-        width: 100px;
-        height: 165px;
+        --card_width: var(--card_width_s);
+        --card_height: var(--card_height_s);
+        --cardholder_width: var(--cardholder_width_s);
+        --cardholder_height: var(--cardholder_height_s);
+        --table_width: var(--table_width_s);
+        --myhand_width: var(--myhand_width_s);
+        --grid_width: var(--grid_width_s);
+        --grid_height: var(--grid_height_s);
+    }
+}
+
+@media only screen and (min-width: 1350px) and (max-width: 1900px) {
+
+    .scp_players_hidden,
+    .scp_players_visible {
+        --board-width: var(--board-width_m);
+
+        --card_width: var(--card_width_m);
+        --card_height: var(--card_height_m);
+        --cardholder_width: var(--cardholder_width_m);
+        --cardholder_height: var(--cardholder_height_m);
+        --table_width: var(--table_width_m);
+        --myhand_width: var(--myhand_width_m);
+        --grid_width: var(--grid_width_m);
+        --grid_height: var(--grid_height_m);
+    }
+}
+
+@media only screen and (min-width: 1900px) {
+
+    .scp_players_hidden,
+    .scp_players_visible {
+        --board-width: var(--board-width_l);
+
+        --card_width: var(--card_width_l);
+        --card_height: var(--card_height_l);
+        --cardholder_width: var(--cardholder_width_l);
+        --cardholder_height: var(--cardholder_height_l);
+        --table_width: var(--table_width_l);
+        --myhand_width: var(--myhand_width_l);
+        --grid_width: var(--grid_width_l);
+        --grid_height: var(--grid_height_l);
     }
 }
 
 
-@media only screen and (min-width: 1720px) {
-
-    #scp_board {
-        min-width: 1240px;
-    }
-
-    /* All card holders */
-    .scp_cardholder {
-        min-width: 152px;
-        /* card + 20 padding */
-        min-height: 260px;
-    }
-
-    /****************** Card played & deck ******************/
-    #interactions {
-        width: 360px;
-        /* (card + 20 padding) * 2 + 20 padding */
-    }
-
-    #capturechoice {
-        min-width: 680px;
-    }
-
-    #deck .scp_deck {
-        line-height: 219px;
-    }
 
 
+/****************** Sizes - Mapping ******************/
 
-    /****************** Cards and decks ******************/
-    .scp_card,
-    .scp_deck,
-    #deck .scp_deck {
-        width: 132px;
-        height: 219px;
-    }
+#scp_board {
+    width: var(--board-width);
+}
+
+#scp_table {
+    width: var(--table_width);
+    min-height: var(--cardholder_height);
+}
+
+#scp_myhand,
+#scp_capturechoice {
+    width: var(--myhand_width);
+}
+
+#scp_myhand {
+    min-height: var(--cardholder_height);
+}
+
+#scp_deck,
+.scp_player_seat,
+#scp_cardplayed {
+    width: var(--cardholder_width);
+    height: var(--cardholder_height);
+}
+
+.scp_card,
+.scp_deck,
+.stockitem {
+    width: var(--card_width) !important;
+    height: var(--card_height) !important;
+}
+
+#scp_deck .scp_deck {
+    line-height: var(--card_height);
 }
