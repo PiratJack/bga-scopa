@@ -12,7 +12,7 @@
 <div id="scp_board">
 
     <!-- BEGIN seat -->
-    <div class="whiteblock scp_player_seat scp_player_seat_{seat_position}" style="visibility: {visibility}" id="scp_player_seat_{player_id}">
+    <div class="whiteblock scp_player_seat scp_player_seat_{seat_position}" style="{style}" id="scp_player_seat_{player_id}">
         <h3>{player_name}</h3>
         <div id="scp_player_seat_{player_id}_cards" class="scp_deck"></div>
     </div>
@@ -44,7 +44,7 @@
     </div>
 
     <!-- BEGIN seat_bottom_right -->
-    <div class="whiteblock scp_player_seat scp_player_seat_{seat_position}" style="visibility: {visibility}" id="scp_player_seat_{player_id}">
+    <div class="whiteblock scp_player_seat scp_player_seat_{seat_position}" style="{style}" id="scp_player_seat_{player_id}">
         <h3>{player_name}</h3>
         <div id="scp_player_seat_{player_id}_cards" class="scp_deck"></div>
     </div>

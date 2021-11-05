@@ -41,16 +41,16 @@ class view_scopa_scopa extends game_view
                 $player = array_pop($player);
                 $this->page->insert_block($seat_tpl, [
                     'seat_position' => $seat,
-                    'visibility' => '',
+                    'style' => 'color: #'.$player['player_color'],
                     'player_id' => $player['player_id'],
-                    'player_name' => $player['player_name']
+                    'player_name' => $player['player_name'],
                 ]);
             } else {
                 $this->page->insert_block($seat_tpl, [
                     'seat_position' => $seat,
-                    'visibility' => 'hidden',
+                    'style' => 'visibility: hidden;',
                     'player_id' => '',
-                    'player_name' => ''
+                    'player_name' => '',
                 ]);
             }
         }

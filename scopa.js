@@ -281,7 +281,7 @@ define([
                     for (i in captures) {
                         var cardCaptured = captures[i];
                         var cardCapturedDiv = this.renderCard(cardCaptured, 'scp_tablehandcards_item_' + cardCaptured.id);
-                        var cardCapturedAnim = this.slideToObject(cardCapturedDiv, waiting_zone, 750); //TODO: Move towards player's seat
+                        var cardCapturedAnim = this.slideToObject(cardCapturedDiv, waiting_zone, 750);
                         dojo.connect(cardCapturedAnim, 'onEnd', dojo.destroy);
                         dojo.connect(cardCapturedAnim, 'beforeBegin', (node) => this.tableCards.removeFromStockById(node.dataset.card));
                         animations.push(cardCapturedAnim);
