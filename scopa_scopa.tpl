@@ -43,12 +43,12 @@
         </div>
     </div>
 
-    <!-- BEGIN seat_bottom_right -->
+    <!-- BEGIN seat_bottom -->
     <div class="whiteblock scp_player_seat scp_player_seat_{seat_position}" style="{style}" id="scp_player_seat_{player_id}">
         <h3>{player_name}</h3>
         <div id="scp_player_seat_{player_id}_cards" class="scp_deck"></div>
     </div>
-    <!-- END seat_bottom_right -->
+    <!-- END seat_bottom -->
 
     <div id="scp_capturechoice" class="whiteblock">
         <h3>

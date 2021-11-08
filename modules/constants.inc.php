@@ -33,6 +33,10 @@ if (!defined('SCP_VARIANT_SCOPA')) {
     define('SCP_VARIANT_SCOPA_A_PERDERE', 9);
     define('SCP_VARIANT_SCOPA_FRAC', 10);
 
+    define('SCP_VARIANT_NAPOLA_ENABLED', 104);
+    define('SCP_VARIANT_NAPOLA_ENABLED_YES', 1);
+    define('SCP_VARIANT_NAPOLA_ENABLED_NO', 2);
+
     define('SCP_TEAM_PLAY', 103);
     define('SCP_TEAM_PLAY_YES', 1);
     define('SCP_TEAM_PLAY_NO', 2);

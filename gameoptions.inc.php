@@ -163,6 +163,28 @@ $game_options = [
             ],
         ],
     ],
+    SCP_VARIANT_NAPOLA_ENABLED => [
+        'name' => totranslate('Napola variant'),
+        'values' => [
+            SCP_VARIANT_NAPOLA_ENABLED_YES => [
+                'name' => totranslate('Enabled'),
+                'tmdisplay' => totranslate('Napola variant enabled'),
+            ],
+            SCP_VARIANT_NAPOLA_ENABLED_NO => [
+                'name' => totranslate('Disabled'),
+                'tmdisplay' => totranslate(''),
+            ],
+        ],
+        'default' => SCP_VARIANT_NAPOLA_ENABLED_NO,
+        'displaycondition' => [
+            [
+                'type' => 'otheroptionisnot',
+                'id' => SCP_VARIANT,
+                'value' => SCP_VARIANT_NAPOLA,
+            ],
+        ],
+        'notdisplayedmessage' => totranslate('No need to enable Napola twice')
+    ],
     SCP_TEAM_PLAY => [
         'name' => totranslate('Team play'),
         'values' => [

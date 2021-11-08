@@ -28,11 +28,11 @@ class view_scopa_scopa extends game_view
 
 
         $players = $this->game->loadPlayersBasicInfosWithTeam();
-        $seats = ['left', 'top_left', 'right', 'top_right', 'bottom_right'];
+        $seats = ['left', 'top_left', 'right', 'top_right', 'bottom_right', 'bottom_left'];
         $this->page->begin_block("scopa_scopa", "seat");
-        $this->page->begin_block("scopa_scopa", "seat_bottom_right");
+        $this->page->begin_block("scopa_scopa", "seat_bottom");
         foreach ($seats as $seat) {
-            $seat_tpl = $seat == 'bottom_right'?'seat_bottom_right':'seat';
+            $seat_tpl = in_array($seat, ['bottom_right', 'bottom_left'])?'seat_bottom':'seat';
             $player = array_filter($players, function ($v) use ($seat) {
                 return isset($v['seat_position']) && $v['seat_position'] == $seat;
             });

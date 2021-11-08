@@ -46,6 +46,14 @@
     display: none;
 }
 
+.scp_player_seat_bottom_left {
+    display: none;
+}
+
+.spectatorMode .scp_player_seat_bottom_left {
+    display: initial;
+}
+
 /* Card can capture */
 .scp_canCapture {
     border-bottom: 2px black dotted !important;
@@ -212,6 +220,12 @@
 .scp_player_seat_bottom_right {
     float: right;
     margin-right: var(--grid_width);
+    margin-top: 10px;
+}
+
+.scp_player_seat_bottom_left {
+    float: left;
+    margin-left: var(--grid_width);
     margin-top: 10px;
 }
 

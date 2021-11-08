@@ -22,6 +22,7 @@ class scopa extends Table
                 'target_score' => SCP_OPTION_POINTS_TO_WIN,
                 'max_capture_cards' => SCP_OPTION_MAX_CAPTURE,
                 'game_variant' => SCP_VARIANT,
+                'napola_variant' => SCP_VARIANT_NAPOLA_ENABLED,
                 'team_play' => SCP_TEAM_PLAY,
             ]
         );
@@ -363,11 +364,16 @@ class scopa extends Table
 
         // Define player's seat position
         $player_order = $this->getNextPlayerTable();
-        $active_player = $this->getCurrentPlayerId();
-        $player_pointer = $player_order[$active_player];
+        $current_player = $this->getCurrentPlayerId();
+        if (!array_key_exists($current_player, $player_order)) {
+            $current_player = $player_order[0];
+            $players[$current_player]['seat_position'] = 'bottom_left';
+        }
+
+        $player_pointer = $player_order[$current_player];
         $order = 1;
         $seat_position = $this->seat_positions[count($players)];
-        while ($active_player != $player_pointer) {
+        while ($current_player != $player_pointer && $order < count($players)) {
             $players[$player_pointer]['seat_position'] = $seat_position[$order];
             $order++;
             $player_pointer = $player_order[$player_pointer];
@@ -531,6 +537,22 @@ class scopa extends Table
         // Update scores
         $this->notif_playerScores();
         self::notifyAllPlayers('simplePause', '', ['time' => 2000]);
+    }
+
+    // A player wins points for Napola: Since it may be counted separately, I have a separate function
+    private function playerWinsNapolaPoints($scorer_id, $win_type, $nb_points, &$scoring_table)
+    {
+        // Enabled through the "regular" variant dropdown
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_NAPOLA) {
+            $this->playerWinsVariantPoints($scorer_id, $win_type, $nb_points, $scoring_table);
+        }
+        // Enabled separately ==> need to move it to a separate row (otherwise, counted twice)
+        else {
+            $current_variant_scores = $scoring_table['variant'];
+            $this->playerWinsVariantPoints($scorer_id, $win_type, $nb_points, $scoring_table);
+            $scoring_table['napola'] = $scoring_table['variant'];
+            $scoring_table['variant'] = $current_variant_scores;
+        }
     }
 
     // There is a tie => notify everyone
@@ -946,6 +968,7 @@ class scopa extends Table
             'coins_captured' => clienttranslate('Coins captured'),
             'prime_score' => clienttranslate('Prime (primiera)'),
             'variant' => '',
+            'napola' => clienttranslate('Napola'),
             'added_points' => clienttranslate('Points won this round'),
             'final_score' => clienttranslate('Final score'),
         ];
@@ -960,6 +983,10 @@ class scopa extends Table
             $game_options = $this->getTableOptions();
             $variant_id = $this->getGameStateValue('game_variant');
             $scoring_rows['variant'] = $game_options[SCP_VARIANT]['values'][$variant_id]['name'];
+        }
+        // Hide the Napola row if that is not enabled separately
+        if ($this->getGameStateValue('napola_variant') == SCP_VARIANT_NAPOLA_ENABLED_NO || $this->getGameStateValue('game_variant') == SCP_VARIANT_NAPOLA) {
+            unset($scoring_rows['napola']);
         }
 
         // Scoring for regular Scopa game
@@ -978,14 +1005,15 @@ class scopa extends Table
             $this->scorePrime($cards, $score_table);
         }
 
+        // Score for Napola
+        if ($this->getGameStateValue('napola_variant') == SCP_VARIANT_NAPOLA_ENABLED_YES || $this->getGameStateValue('game_variant') == SCP_VARIANT_NAPOLA) {
+            $this->scoreNapola($cards, $score_table);
+        }
+
         // Score for variants
         switch ($this->getGameStateValue('game_variant')) {
             case SCP_VARIANT_IL_PONINO:
                 $this->scoreIlPonino($cards, $score_table);
-                break;
-
-            case SCP_VARIANT_NAPOLA:
-                $this->scoreNapola($cards, $score_table);
                 break;
 
             case SCP_VARIANT_SCOPONE_DE_TRENTE:
@@ -1239,7 +1267,7 @@ class scopa extends Table
         }
 
         if ($max_coin_captured > 2) {
-            $this->playerWinsVariantPoints($player_id, 'napola', $max_coin_captured, $score_table);
+            $this->playerWinsNapolaPoints($player_id, 'napola', $max_coin_captured, $score_table);
         }
     }
 
