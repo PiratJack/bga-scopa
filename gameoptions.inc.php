@@ -95,6 +95,11 @@ $game_options = [
                 'tmdisplay' => totranslate('Variant: Scopa Frac'),
                 'description' => totranslate('Aces, Jacks, Knights and Kings are each worth 1 point. This is the only way to mark points. In case of equality, the winner is who captured the King of coins. If a player can capture 1 or multiple cards, he can choose to capture multiple cards.'),
             ],
+            SCP_VARIANT_ESCOBA => [
+                'name' => totranslate('Escoba'),
+                'tmdisplay' => totranslate('Variant: Escoba'),
+                'description' => totranslate('Capturing cards is possible only if the sum of cards equals 15. Extra point for capturing most sevens and all of the sevens.'),
+            ],
         ],
         'default' => SCP_VARIANT_SCOPA,
         'startcondition' => [

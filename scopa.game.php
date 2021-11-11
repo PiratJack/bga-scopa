@@ -82,8 +82,8 @@ class scopa extends Table
         // Keep only combinations possibles for the player
         $possible_actions = [];
 
-        // In Scopa di Quindici, capture is possible if the sum of cards is 15
-        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_DI_QUINDICI) {
+        // In Scopa di Quindici & Escoba, capture is possible if the sum of cards is 15
+        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA_DI_QUINDICI, SCP_VARIANT_ESCOBA])) {
             foreach ($hand as $card_id => $card) {
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
@@ -500,7 +500,7 @@ class scopa extends Table
         $scorer_type = $this->isTeamPlay() ? 'team' : 'player';
         $scorer_name = self::getScorerNameById($scorer_id, $scorer_type);
 
-        if (!$this->isTeamPlay()) {
+        if (!$this->isTeamPlay() && $win_type != 'sevens_captured') {
             $this->incStat(1, $win_type, $scorer_id);
         }
 
@@ -516,6 +516,7 @@ class scopa extends Table
             'cards_captured' => clienttranslate('${player_name} captured the most cards and wins a point.'),
             'coins_captured' => clienttranslate('${player_name} captured the most coin cards and wins a point.'),
             'prime_score' => clienttranslate('${player_name} scores the highest prime and wins a point.'),
+            'sevens_captured' => clienttranslate('${player_name} captured the most sevens and wins a point.'),
         ];
         self::notifyAllPlayers(
             'message',
@@ -551,6 +552,7 @@ class scopa extends Table
             'scopone_de_trente' => clienttranslate('${player_name} captured ${card_captured} of coins and marks ${nb_points} points.'),
             'scopone_de_trente_all' => clienttranslate('${player_name} captured Ace, 2 and 3 of coins - Victory!'),
             'scopa_frac' => clienttranslate('${player_name} captured ${nb_points} valuable cards and marks ${nb_points} points'),
+            'escoba_all_sevens' => clienttranslate('${player_name} captured all sevens and marks a point'),
         ];
         self::notifyAllPlayers(
             'message',
@@ -597,6 +599,7 @@ class scopa extends Table
                 'coins_captured' => clienttranslate('Multiple teams captured the most coins. No point won!'),
                 'prime_score' => clienttranslate('Multiple teams have the highest prime score. No point won!'),
                 'il_ponino' => clienttranslate('No team captured the 4 knights. No point won!'),
+                'sevens_captured' => clienttranslate('Multiple teams captured the most sevens. No point won!'),
             ];
         } else {
             $tie_types = [
@@ -604,6 +607,7 @@ class scopa extends Table
                 'coins_captured' => clienttranslate('Multiple players captured the most coins. No point won!'),
                 'prime_score' => clienttranslate('Multiple players have the highest prime score. No point won!'),
                 'il_ponino' => clienttranslate('Nobody captured the 4 knights. No point won!'),
+                'sevens_captured' => clienttranslate('Multiple players captured the most sevens. No point won!'),
             ];
         }
         self::notifyAllPlayers('message', $tie_types[$tie_type], []);
@@ -878,6 +882,7 @@ class scopa extends Table
             SCP_VARIANT_RE_BELLO => 3,
             SCP_VARIANT_SCOPA_A_PERDERE => 3,
             SCP_VARIANT_SCOPA_FRAC => 3,
+            SCP_VARIANT_ESCOBA => 3,
         ][$this->getGameStateValue('game_variant')];
         $players = self::loadPlayersBasicInfos();
         foreach ($players as $player_id => $player) {
@@ -1000,6 +1005,7 @@ class scopa extends Table
             'cards_captured' => clienttranslate('Cards captured'),
             'coins_captured' => clienttranslate('Coins captured'),
             'prime_score' => clienttranslate('Prime (primiera)'),
+            'sevens_captured' => clienttranslate('Sevens captured'),
             'variant' => '',
             'napola' => clienttranslate('Napola'),
             'added_points' => clienttranslate('Points won this round'),
@@ -1020,6 +1026,11 @@ class scopa extends Table
         // Hide the Napola row if that is not enabled separately
         if ($this->getGameStateValue('napola_variant') == SCP_VARIANT_NAPOLA_ENABLED_NO || $this->getGameStateValue('game_variant') == SCP_VARIANT_NAPOLA) {
             unset($scoring_rows['napola']);
+        }
+
+        // Hide the Escoba row if disabled
+        if ($this->getGameStateValue('game_variant') != SCP_VARIANT_ESCOBA) {
+            unset($scoring_rows['sevens_captured']);
         }
 
         // Scoring for regular Scopa game
@@ -1060,12 +1071,19 @@ class scopa extends Table
             case SCP_VARIANT_SCOPA_FRAC:
                 $this->scoreScopaFrac($cards, $score_table);
                 break;
+
+            case SCP_VARIANT_ESCOBA:
+                $this->scoreEscoba($cards, $score_table);
+                break;
         }
 
         // Scopa frac: you can't win points that way
         if ($this->getGameStateValue('game_variant') != SCP_VARIANT_SCOPA_FRAC) {
             // Get the winners in each category (except scopa & sette bello, already counted)
             $categories = ['cards_captured', 'coins_captured', 'prime_score'];
+            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ESCOBA) {
+                $categories[] = 'sevens_captured';
+            }
             foreach ($categories as $category) {
                 $high_score = max($score_table[$category]);
                 $winners = array_filter(
@@ -1355,6 +1373,27 @@ class scopa extends Table
                 return $card['location_arg'] == $player_id;
             });
             $this->playerWinsVariantPoints($player_id, 'scopa_frac', count($cardsCaptured), $score_table);
+        }
+    }
+
+    // Scores Escoba (= Capturing the most sevens is worth 1 point, capturing all of them is worth 2)
+    private function scoreEscoba($cards, &$score_table)
+    {
+        $seven_captured = array_filter($cards, function ($card) {
+            return $card['type_arg'] == 7;
+        });
+
+        $players = array_unique(array_map(function ($v) {
+            return $v['location_arg'];
+        }, $seven_captured));
+
+        foreach ($players as $player_id) {
+            $score_table['sevens_captured'][$player_id] = count(array_filter($seven_captured, function ($v) use ($player_id) {
+                return $v['location_arg'] == $player_id;
+            }));
+            if ($score_table['sevens_captured'][$player_id] == 4) {
+                $this->playerWinsVariantPoints($player_id, 'escoba_all_sevens', 1, $score_table);
+            }
         }
     }
 
