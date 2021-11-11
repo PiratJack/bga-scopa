@@ -92,13 +92,33 @@ class scopa extends Table
                     }
                 );
             }
-        } // In Asso piglia tutto, Aces capture everything
+        } // In Asso piglia tutto (simplified), Aces capture everything
         elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO) {
             foreach ($hand as $card_id => $card) {
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
                     function ($value) use ($card) {
                         return ($value['total'] == $card['type_arg']) || $card['type_arg'] == 1;
+                    }
+                );
+            }
+        }
+        // In Asso piglia tutto (traditional), Aces capture everything with 2 conditions:
+        // - There is no ace on table
+        // - You're not the first player
+        elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL) {
+            $ace_on_table = count(array_filter($table, function ($card) {
+                return $card['type_arg'] == 1;
+            })) > 0;
+            $first_player_first_round = (count($table) == 4) && (count($this->cards->getCardsInLocation('capture')) == 0) && (count($this->cards->getCardsInLocation('hand')) == $this->getPlayersNumber() * 3);
+
+            $ace_captures_all = !$ace_on_table && !$first_player_first_round;
+
+            foreach ($hand as $card_id => $card) {
+                $possible_actions[$card_id] = array_filter(
+                    $combinations,
+                    function ($value) use ($card, $ace_captures_all) {
+                        return ($value['total'] == $card['type_arg']) || ($card['type_arg'] == 1 && $ace_captures_all);
                     }
                 );
             }
@@ -111,7 +131,7 @@ class scopa extends Table
                 }
             );
 
-
+            // Keep combinations if total cards = card in hand
             foreach ($hand as $card_id => $card) {
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
@@ -154,7 +174,7 @@ class scopa extends Table
                 )
             );
             // array_values forces a re-indexing, which means Javascript will see it as an array and not an object
-            // In Asso piglia tutto, Aces capture everything
+            // In Asso piglia tutto (simplified), Aces capture everything
             if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO) {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
@@ -164,7 +184,19 @@ class scopa extends Table
                         }
                     )
                 );
-            } else {
+            }
+            // In Asso piglia tutto (simplified), Aces capture everything
+            elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL) {
+                $possible_actions[$card_id] = array_values(
+                    array_filter(
+                        $combinations,
+                        function ($value) use ($min_cards, $hand, $table, $card_id, $ace_captures_all) {
+                            return ($hand[$card_id]['type_arg'] == 1 && $ace_captures_all) ? $value['size'] == count($table) : $value['size'] == $min_cards;
+                        }
+                    )
+                );
+            } // In regular play, it's possible to capture only the minimum number of cards
+            else {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
                         $combinations,
@@ -842,6 +874,7 @@ class scopa extends Table
             SCP_VARIANT_SCOPA_DI_QUINDICI => 3,
             SCP_VARIANT_SCOPONE_DE_TRENTE => 9,
             SCP_VARIANT_ASSO_PIGLIA_TUTTO => 3,
+            SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL => 3,
             SCP_VARIANT_RE_BELLO => 3,
             SCP_VARIANT_SCOPA_A_PERDERE => 3,
             SCP_VARIANT_SCOPA_FRAC => 3,
@@ -977,7 +1010,7 @@ class scopa extends Table
         }
 
         // For regular scopa, remove the "variant" row
-        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA, SCP_VARIANT_SCOPONE, SCP_VARIANT_SCOPONE_SCIENTIFICO, SCP_VARIANT_SCOPA_DI_QUINDICI, SCP_VARIANT_ASSO_PIGLIA_TUTTO])) {
+        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA, SCP_VARIANT_SCOPONE, SCP_VARIANT_SCOPONE_SCIENTIFICO, SCP_VARIANT_SCOPA_DI_QUINDICI, SCP_VARIANT_ASSO_PIGLIA_TUTTO, SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL])) {
             unset($scoring_rows['variant']);
         } else {
             $game_options = $this->getTableOptions();
@@ -1333,10 +1366,6 @@ class scopa extends Table
     public function zombieTurn($state, $active_player)
     {
         $statename = $state['name'];
-
-        if ($this->isTeamPlay()) {
-            throw new BgaVisibleSystemException(self::_('Zombie mode not supported in team plays, as it would disadvantage one of the teams'));
-        }
 
         if ('activeplayer' === $state['type']) {
             // Choose which card to play

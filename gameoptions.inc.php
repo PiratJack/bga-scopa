@@ -71,9 +71,14 @@ $game_options = [
                 'description' => totranslate('Played in 2 teams of 2 and with target of 21 points. Ace, 2 and 3 of coins are worth 1, 2 and 3 extra points. Capturing all three means immediate victory.'),
             ],
             SCP_VARIANT_ASSO_PIGLIA_TUTTO => [
-                'name' => totranslate('Acopa d\'Assi / Asso piglia tutto'),
-                'tmdisplay' => totranslate('Variant: Acopa d\'Assi / Asso piglia tutto'),
+                'name' => totranslate('Acopa d\'Assi / Asso piglia tutto (simplified)'),
+                'tmdisplay' => totranslate('Variant: Acopa d\'Assi / Asso piglia tutto (simplified)'),
                 'description' => totranslate('Ace captures all cards on table (and it counts as a scopa).'),
+            ],
+            SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL => [
+                'name' => totranslate('Acopa d\'Assi / Asso piglia tutto (traditional)'),
+                'tmdisplay' => totranslate('Variant: Acopa d\'Assi / Asso piglia tutto (traditional)'),
+                'description' => totranslate('Ace captures all cards on table (and it counts as a scopa). If there\'s an ace on the table or if you\'re the first player, the ace only captures other aces.'),
             ],
             SCP_VARIANT_RE_BELLO => [
                 'name' => totranslate('Re bello'),
@@ -169,6 +174,7 @@ $game_options = [
             SCP_VARIANT_NAPOLA_ENABLED_YES => [
                 'name' => totranslate('Enabled'),
                 'tmdisplay' => totranslate('Napola variant enabled'),
+                'description' => totranslate('Capturing Ace, 2 and 3 of coins is worth 3 points. Also capturing the 4 of coins is worth 4 points. Also capturing the 5 of coins is worth 5 points. And it goes on.'),
             ],
             SCP_VARIANT_NAPOLA_ENABLED_NO => [
                 'name' => totranslate('Disabled'),
