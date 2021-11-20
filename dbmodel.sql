@@ -28,4 +28,5 @@ CREATE TABLE IF NOT EXISTS `user_preferences` (
 
 ALTER TABLE `player` ADD `has_last_captured` BOOLEAN NOT NULL,
                      ADD `scopa_in_round` INT NOT NULL,
-                     ADD `team_id` INT NOT NULL;
+                     ADD `team_id` INT NOT NULL,
+                     ADD `cirulla_points` INT NOT NULL;

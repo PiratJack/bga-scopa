@@ -15,6 +15,7 @@ if (!defined('SCP_VARIANT_SCOPA')) {
     define('SCP_OPTION_POINTS_TO_WIN_16', 2);
     define('SCP_OPTION_POINTS_TO_WIN_21', 3);
     define('SCP_OPTION_POINTS_TO_WIN_31', 4);
+    define('SCP_OPTION_POINTS_TO_WIN_51', 5);
 
     define('SCP_OPTION_MAX_CAPTURE', 101);
     define('SCP_OPTION_MAX_CAPTURE_2', 1);
@@ -34,6 +35,7 @@ if (!defined('SCP_VARIANT_SCOPA')) {
     define('SCP_VARIANT_SCOPA_FRAC', 10);
     define('SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL', 11);
     define('SCP_VARIANT_ESCOBA', 12);
+    define('SCP_VARIANT_CIRULLA', 13);
 
     define('SCP_VARIANT_NAPOLA_ENABLED', 104);
     define('SCP_VARIANT_NAPOLA_ENABLED_YES', 1);
@@ -60,4 +62,7 @@ if (!defined('SCP_VARIANT_SCOPA')) {
     define('SCP_PREF_DISPLAY_PLAYERS', 103);
     define('SCP_PREF_DISPLAY_PLAYERS_YES', 1);
     define('SCP_PREF_DISPLAY_PLAYERS_NO', 2);
+
+
+    define('SCP_GLOBAL_CIRULLA_JOKER_VALUE', 10);
 }

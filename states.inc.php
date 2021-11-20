@@ -11,6 +11,7 @@
 if (!defined('STATE_DEAL_START')) {
     define('STATE_DEAL_START', 20);
     define('STATE_HAND_START', 30);
+    define('STATE_CIRULLA_DECLARE', 35);
     define('STATE_PLAYER_TURN', 40);
     define('STATE_NEXT_PLAYER', 50);
     define('STATE_AUTO_PLAYER', 55);
@@ -45,6 +46,18 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stHandStart',
         'updateGameProgression' => true,
+        'transitions' => ['playerTurn' => STATE_PLAYER_TURN, 'cirullaDeclare' => STATE_CIRULLA_DECLARE],
+    ],
+
+    /// Declare Cirulla combinations
+    STATE_CIRULLA_DECLARE => [
+        'name' => 'cirullaDeclare',
+        'description' => clienttranslate('Other players may declare a Cirulla combination'),
+        'descriptionmyturn' => clienttranslate('${you} may declare a Cirulla combination or Pass'),
+        'type' => 'multipleactiveplayer',
+        'action' => 'stCirullaDeclare',
+        'args' => 'argCirullaDeclare',
+        'possibleactions' => ['cirullaDeclare', 'cirullaPass'],
         'transitions' => ['' => STATE_PLAYER_TURN],
     ],
 

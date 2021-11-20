@@ -164,8 +164,19 @@ define([
                 }
             },
 
-            // Not used
-            onUpdateActionButtons: function(stateName, args) {},
+            // Display buttons for Cirulla
+            onUpdateActionButtons: function(stateName, args) {
+                if (this.isCurrentPlayerActive()) {
+                    switch (stateName) {
+                        case 'cirullaDeclare':
+                            this.addActionButton('cirullaDeclare_button', _('Declare Cirulla combination'), () => {
+                                this.onCirullaDeclare(args._private.jokerValues);
+                            });
+                            this.addActionButton('cirullaPass_button', _('Pass'), 'onCirullaPass');
+                            break;
+                    }
+                }
+            },
 
             ///////////////////////////////////////////////////
             //// Utility methods
@@ -190,8 +201,8 @@ define([
             setupNewCard: function(card_div, card_type_id, card_id) {
                 var card = this.getCardColorAndValue(card_type_id);
                 var text = dojo.string.substitute(_("${value} of ${suit}"), {
-                    'value': this.gamedatas.values_label[card.value],
-                    'suit': this.gamedatas.colors[card.color].name,
+                    'value': _(this.gamedatas.values_label[card.value]),
+                    'suit': _(this.gamedatas.colors[card.color].name),
                 });
 
                 var tooltipHideClass = dojo.query("#preference_control_100")[0].value == "2" ? 'scp_hidden' : '';
@@ -207,8 +218,8 @@ define([
             // Displays a card in a given element
             renderCard: function(card, position) {
                 var text = dojo.string.substitute(_("${value} of ${suit}"), {
-                    'value': this.gamedatas.values_label[card.type_arg],
-                    'suit': this.gamedatas.colors[card.type].name,
+                    'value': _(this.gamedatas.values_label[card.type_arg]),
+                    'suit': _(this.gamedatas.colors[card.type].name),
                 });
                 var tooltipHideClass = dojo.query("#preference_control_100")[0].value == "2" ? 'scp_hidden' : '';
                 return dojo.place(
@@ -525,6 +536,43 @@ define([
                     this.playerCards.unselectAll();
                     this.hideCaptureOptions();
                 }
+            },
+
+            // Player declares his Cirulla combination
+            onCirullaDeclare: function(jokerValues) {
+                if (this.checkAction('cirullaDeclare', true) == false)
+                    return;
+
+                if (jokerValues.length == 0) {
+                    this.ajaxcall('/scopa/scopa/cirullaDeclare.html', {
+                        lock: true
+                    }, this, function(result) {}, function(is_error) {});
+                } else if (jokerValues.length == 1) {
+                    this.ajaxcall('/scopa/scopa/cirullaDeclare.html', {
+                        lock: true,
+                        jokerValue: jokerValues[0]
+                    }, this, function(result) {}, function(is_error) {});
+                } else {
+                    this.multipleChoiceDialog(
+                        _('What should be the value of the 7 of cups?'), jokerValues,
+                        dojo.hitch(this, function(choice) {
+                            var jokerValue = jokerValues[choice];
+                            this.ajaxcall('/scopa/scopa/cirullaDeclare.html', {
+                                lock: true,
+                                jokerValue: jokerValue
+                            }, this, function(result) {});
+                        }));
+                }
+            },
+
+            // Player does not his Cirulla combination
+            onCirullaPass: function(evt) {
+                if (this.checkAction('cirullaPass', true) == false)
+                    return;
+
+                this.ajaxcall('/scopa/scopa/cirullaPass.html', {
+                    lock: true
+                }, this, function(result) {}, function(is_error) {});
             },
 
 

@@ -40,6 +40,33 @@ class action_scopa extends APP_GameAction
     }
 
     /**
+     * Player declare a Cirulla combination
+     */
+    public function cirullaDeclare()
+    {
+        self::setAjaxMode();
+
+        // Retrieve arguments
+        $joker_value = self::getArg('jokerValue', AT_posint, false, 0);
+
+        $this->game->act_cirullaDeclare($joker_value);
+
+        self::ajaxResponse();
+    }
+
+    /**
+     * Player declare a Cirulla combination
+     */
+    public function cirullaPass()
+    {
+        self::setAjaxMode();
+
+        $this->game->act_cirullaPass();
+
+        self::ajaxResponse();
+    }
+
+    /**
      * Player changes display preferences
      */
     public function setUserPref()

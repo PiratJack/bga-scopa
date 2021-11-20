@@ -21,6 +21,7 @@ $game_options = [
             SCP_OPTION_POINTS_TO_WIN_16 => ['name' => totranslate('16 points'), 'tmdisplay' => totranslate('16 points to win')],
             SCP_OPTION_POINTS_TO_WIN_21 => ['name' => totranslate('21 points'), 'tmdisplay' => totranslate('21 points to win')],
             SCP_OPTION_POINTS_TO_WIN_31 => ['name' => totranslate('31 points'), 'tmdisplay' => totranslate('31 points to win')],
+            SCP_OPTION_POINTS_TO_WIN_51 => ['name' => totranslate('51 points (mostly for Cirulla)'), 'tmdisplay' => totranslate('51 points to win')],
         ],
         'default' => SCP_OPTION_POINTS_TO_WIN_11,
     ],
@@ -51,18 +52,18 @@ $game_options = [
                 'description' => totranslate('Capturing Ace, 2 and 3 of coins is worth 3 points. Also capturing the 4 of coins is worth 4 points. Also capturing the 5 of coins is worth 5 points. And it goes on.'),
             ],
             SCP_VARIANT_SCOPONE => [
-                'name' => totranslate('Scopone'),
-                'tmdisplay' => totranslate('Variant: Scopone'),
+                'name' => totranslate('Scopone classico'),
+                'tmdisplay' => totranslate('Variant: Scopone classico'),
                 'description' => totranslate('Played in 2 teams of 2. Starts with 4 cards on table and 9 in player\'s hands.'),
             ],
             SCP_VARIANT_SCOPONE_SCIENTIFICO => [
-                'name' => totranslate('Scopone Scientifico'),
-                'tmdisplay' => totranslate('Variant: Scopone Scientifico'),
+                'name' => totranslate('Scopone Scientifico / Scopone a 10'),
+                'tmdisplay' => totranslate('Variant: Scopone Scientifico / Scopone a 10'),
                 'description' => totranslate('Played in 2 teams of 2. Starts with no card on table and 10 in player\'s hands.'),
             ],
             SCP_VARIANT_SCOPA_DI_QUINDICI => [
-                'name' => totranslate('Scopa di Quindici'),
-                'tmdisplay' => totranslate('Variant: Scopa di Quindici'),
+                'name' => totranslate('Scopa a Quindici'),
+                'tmdisplay' => totranslate('Variant: Scopa a Quindici'),
                 'description' => totranslate('Capturing cards is possible only if the sum of cards equals 15. Examples: 7 captures 8, King takes 5 or Ace + 4.'),
             ],
             SCP_VARIANT_SCOPONE_DE_TRENTE => [
@@ -71,13 +72,13 @@ $game_options = [
                 'description' => totranslate('Played in 2 teams of 2 and with target of 21 points. Ace, 2 and 3 of coins are worth 1, 2 and 3 extra points. Capturing all three means immediate victory.'),
             ],
             SCP_VARIANT_ASSO_PIGLIA_TUTTO => [
-                'name' => totranslate('Acopa d\'Assi / Asso piglia tutto (simplified)'),
-                'tmdisplay' => totranslate('Variant: Acopa d\'Assi / Asso piglia tutto (simplified)'),
+                'name' => totranslate('Scopa d\'Assi / Asso piglia tutto (simplified)'),
+                'tmdisplay' => totranslate('Variant: Scopa d\'Assi / Asso piglia tutto (simplified)'),
                 'description' => totranslate('Ace captures all cards on table (and it counts as a scopa).'),
             ],
             SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL => [
-                'name' => totranslate('Acopa d\'Assi / Asso piglia tutto (traditional)'),
-                'tmdisplay' => totranslate('Variant: Acopa d\'Assi / Asso piglia tutto (traditional)'),
+                'name' => totranslate('Scopa d\'Assi / Asso piglia tutto (traditional)'),
+                'tmdisplay' => totranslate('Variant: Scopa d\'Assi / Asso piglia tutto (traditional)'),
                 'description' => totranslate('Ace captures all cards on table (and it counts as a scopa). If there\'s an ace on the table or if you\'re the first player, the ace only captures other aces.'),
             ],
             SCP_VARIANT_RE_BELLO => [
@@ -99,6 +100,11 @@ $game_options = [
                 'name' => totranslate('Escoba'),
                 'tmdisplay' => totranslate('Variant: Escoba'),
                 'description' => totranslate('Capturing cards is possible only if the sum of cards equals 15. Extra point for capturing most sevens and all of the sevens.'),
+            ],
+            SCP_VARIANT_CIRULLA => [
+                'name' => totranslate('Cirulla'),
+                'tmdisplay' => totranslate('Variant: Cirulla'),
+                'description' => totranslate('This variant is a combination of several others, plus additional specific rules. Please refer to the game help for the full rules. Usually played in 51 points'),
             ],
         ],
         'default' => SCP_VARIANT_SCOPA,

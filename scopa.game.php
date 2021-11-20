@@ -24,6 +24,8 @@ class scopa extends Table
                 'game_variant' => SCP_VARIANT,
                 'napola_variant' => SCP_VARIANT_NAPOLA_ENABLED,
                 'team_play' => SCP_TEAM_PLAY,
+
+                'cirulla_joker_value' => SCP_GLOBAL_CIRULLA_JOKER_VALUE,
             ]
         );
 
@@ -32,6 +34,7 @@ class scopa extends Table
             SCP_OPTION_POINTS_TO_WIN_16 => 16,
             SCP_OPTION_POINTS_TO_WIN_21 => 21,
             SCP_OPTION_POINTS_TO_WIN_31 => 31,
+            SCP_OPTION_POINTS_TO_WIN_51 => 51,
         ];
 
         $this->cards = self::getNew('module.common.deck');
@@ -63,6 +66,7 @@ class scopa extends Table
 
         // Cards played on the table
         $table = $this->cards->getCardsInLocation('table');
+        $nb_table_cards = count($table);
 
         // Find all combinations of the table's cards
         $combinations = [];
@@ -97,8 +101,8 @@ class scopa extends Table
             foreach ($hand as $card_id => $card) {
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
-                    function ($value) use ($card) {
-                        return ($value['total'] == $card['type_arg']) || $card['type_arg'] == 1;
+                    function ($value) use ($card, $nb_table_cards) {
+                        return ($value['total'] == $card['type_arg']) || ($card['type_arg'] == 1 && $value['size'] == $nb_table_cards);
                     }
                 );
             }
@@ -117,8 +121,41 @@ class scopa extends Table
             foreach ($hand as $card_id => $card) {
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
-                    function ($value) use ($card, $ace_captures_all) {
-                        return ($value['total'] == $card['type_arg']) || ($card['type_arg'] == 1 && $ace_captures_all);
+                    function ($value) use ($card, $ace_captures_all, $nb_table_cards) {
+                        return ($value['total'] == $card['type_arg']) || ($card['type_arg'] == 1 && $value['size'] == $nb_table_cards && $ace_captures_all);
+                    }
+                );
+            }
+        }
+        // In Cirulla, capture is possible if either:
+        // - The sum of cards on table equals the card played
+        // - The sum of cards on the table + the card played is equal to 15
+        // - Ace captures all cards (unless there's an ace on the table)
+        // If multiple combinations are possible, any is possible (no need to capture the least number of cards)
+        elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA) {
+            $ace_on_table = count(array_filter($table, function ($card) {
+                return $card['type_arg'] == 1;
+            })) > 0;
+
+            $ace_captures_all = !$ace_on_table;
+
+
+            foreach ($hand as $card_id => $card) {
+                $possible_actions[$card_id] = array_filter(
+                    $combinations,
+                    function ($value) use ($card, $ace_captures_all, $nb_table_cards) {
+                        // Replace 7 of cup with joker value
+                        if ($card['type'] == 2 && $card['type_arg'] == 7) {
+                            $card['type_arg'] = self::getGameStateValue('cirulla_joker_value');
+                        }
+
+                        // Ace captures the entire table, unless there's an ace on table
+                        if ($card['type_arg'] == 1 && $ace_captures_all) {
+                            return $value['size'] == $nb_table_cards;
+                        }
+
+                        // Capture is possible if sum (table) = card or sum (hand+table) = 15
+                        return ($value['total'] == $card['type_arg']) || ($value['total'] + $card['type_arg'] == 15);
                     }
                 );
             }
@@ -143,8 +180,8 @@ class scopa extends Table
         }
 
         // Keep only the combination that has the smallest number of cards
-        // In Scopa Frac, we can capture as many cards as wanted (not only the minimum number)
-        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_FRAC) {
+        // In Scopa Frac & Cirulla, we can capture as many cards as wanted (not only the minimum number)
+        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA_FRAC, SCP_VARIANT_CIRULLA])) {
             foreach ($possible_actions as $card_id => $combinations) {
                 // Remove cards that have no combination possible
                 if (0 == count($combinations)) {
@@ -174,8 +211,9 @@ class scopa extends Table
                 )
             );
             // array_values forces a re-indexing, which means Javascript will see it as an array and not an object
-            // In Asso piglia tutto (simplified), Aces capture everything
-            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO) {
+
+            // In Asso piglia tutto (simplified) and Cirulla, Aces capture everything
+            if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_CIRULLA, SCP_VARIANT_ASSO_PIGLIA_TUTTO])) {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
                         $combinations,
@@ -185,7 +223,9 @@ class scopa extends Table
                     )
                 );
             }
-            // In Asso piglia tutto (simplified), Aces capture everything
+            // In Asso piglia tutto (traditionnal), Aces capture everything with 2 conditions:
+            // - There is no ace on table
+            // - You're not the first player
             elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL) {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
@@ -295,6 +335,47 @@ class scopa extends Table
 
         $game_preferences = $this->getTablePreferences();
         return $game_preferences[$pref_id]['default'];
+    }
+
+    // Returns which Cirulla declaration is possible
+    public function getCirullaCombinations($player_id)
+    {
+        $cards = $this->cards->getCardsInLocation('hand', $player_id);
+        $cirullaCombination = '';
+        $joker_values = [];
+
+        $seven_cups_in_hand = count(array_filter($cards, function ($card) {
+            return $card['type'] == 2 && $card['type_arg'] == 7;
+        })) == 1;
+
+
+        // Sum of cards <= 10
+        $sum_cards = $sum_cards = array_sum(array_map(function ($v) {
+            return $v['type_arg'];
+        }, $cards));
+        if ($sum_cards < 10) {
+            $cirullaCombination = 'cirulla_less_than_10';
+        } elseif (($sum_cards - 7) < 10 && $seven_cups_in_hand) {
+            $joker_values = range(1, 9 - ($sum_cards - 7));
+            $cirullaCombination = 'cirulla_less_than_10';
+        }
+
+        // Three of a kind
+        $other_cards_in_hand = array_filter($cards, function ($card) {
+            return !($card['type'] == 2 && $card['type_arg'] == 7);
+        });
+        $card_values = array_values(array_unique(array_map(function ($v) {
+            return $v['type_arg'];
+        }, $other_cards_in_hand)));
+        if (count($card_values) == 1) {
+            if ($seven_cups_in_hand) {
+                $joker_values = [$card_values[0]];
+            }
+
+            $cirullaCombination = 'cirulla_three_kind';
+        }
+
+        return [$cards, $cirullaCombination, $joker_values];
     }
 
 
@@ -553,6 +634,9 @@ class scopa extends Table
             'scopone_de_trente_all' => clienttranslate('${player_name} captured Ace, 2 and 3 of coins - Victory!'),
             'scopa_frac' => clienttranslate('${player_name} captured ${nb_points} valuable cards and marks ${nb_points} points'),
             'escoba_all_sevens' => clienttranslate('${player_name} captured all sevens and marks a point'),
+            'cirulla_picolla' => clienttranslate('${player_name} captured a series of ${card_captured} cards of coins and marks ${nb_points} points.'),
+            'cirulla_grande' => clienttranslate('${player_name} captured all face cards of coins and marks 5 point'),
+            'cirulla_all' => clienttranslate('${player_name} captured all coins - Victory!'),
         ];
         self::notifyAllPlayers(
             'message',
@@ -587,6 +671,43 @@ class scopa extends Table
             $scoring_table['napola'] = $scoring_table['variant'];
             $scoring_table['variant'] = $current_variant_scores;
         }
+    }
+
+    // A player wins points for Cirulla (at the start)
+    private function playerWinsCirullaPoints($scorer_id, $win_type, $nb_points, $cards = [], $sum_cards = 0)
+    {
+        // Define who scored - team or player + their name (for notifications purpose)
+        $scorer_type = $this->isTeamPlay() ? 'team' : 'player';
+        $scorer_name = self::getScorerNameById($scorer_id, $scorer_type);
+
+
+        $win_types = [
+            'cirulla_dealer' => clienttranslate('The table cards sum to ${sum_cards}. ${player_name} marks ${nb_points} point(s) and captures them: <br />${cards_display}'),
+            'cirulla_less_than_10' => clienttranslate('${player_name} has 3 cards summing less than 10 and marks 3 points: <br />${cards_display}'),
+            'cirulla_three_kind' => clienttranslate('${player_name} has a three of a kind and marks 5 points: <br />${cards_display}'),
+        ];
+        self::notifyAllPlayers(
+            'message',
+            $win_types[$win_type],
+            [
+                'player_name' => $scorer_name,  // called "player_name" so that JS colors the names
+                'nb_points' => $nb_points,
+                'sum_cards' => $sum_cards,
+                'cards_display' => $this->cardsToDisplay($cards)
+            ]
+        );
+
+        if ($win_type == 'cirulla_dealer') {
+            $this->DbQuery('UPDATE player SET scopa_in_round=scopa_in_round+'.$nb_points.' WHERE '.$scorer_type.'_id = "'.$scorer_id.'"');
+        } else {
+            $this->DbQuery('UPDATE player SET cirulla_points=cirulla_points+'.$nb_points.' WHERE '.$scorer_type.'_id = "'.$scorer_id.'"');
+        }
+
+        $this->DbQuery('UPDATE player SET player_score=player_score+'.$nb_points.' WHERE '.$scorer_type.'_id = "'.$scorer_id.'"');
+
+        // Update scores
+        $this->notif_playerScores();
+        self::notifyAllPlayers('simplePause', '', ['time' => 2000]);
     }
 
     // There is a tie => notify everyone
@@ -807,6 +928,52 @@ class scopa extends Table
         self::DbQuery($sql);
     }
 
+    // Cirulla: do not declare the combination
+    public function act_cirullaPass()
+    {
+        self::checkAction('cirullaPass');
+        $player_id = self::getCurrentPlayerId();
+
+        $this->gamestate->setPlayerNonMultiactive($player_id, '');
+    }
+
+    // Cirulla: Declare the combination
+    public function act_cirullaDeclare($selected_joker_value)
+    {
+        self::checkAction('cirullaDeclare');
+        $player_id = self::getCurrentPlayerId();
+
+        [$cards, $cirullaCombination, $joker_values] = $this->getCirullaCombinations($player_id);
+
+        if ($joker_values != []) {
+            if (!in_array($selected_joker_value, $joker_values)) {
+                throw new BgaUserException(self::_('This value is not possible.'));
+            }
+        }
+
+        // Attribute points
+        if ($cirullaCombination == 'cirulla_less_than_10') {
+            $nb_points = 3;
+        } elseif ($cirullaCombination == 'cirulla_three_kind') {
+            $nb_points = 5;
+        }
+        $this->playerWinsCirullaPoints($player_id, $cirullaCombination, $nb_points, $cards);
+
+        if ($joker_values != []) {
+            $this->setGameStateValue('cirulla_joker_value', $selected_joker_value);
+            self::notifyAllPlayers(
+                'message',
+                'The 7 of cups is now a/an ${nb_points} for the purpose of capturing cards.',
+                [
+                    'nb_points' => $this->values_label[$selected_joker_value],
+                ]
+            );
+        }
+
+        $this->gamestate->setPlayerNonMultiactive($player_id, '');
+    }
+
+
     //////////////////////////////////////////////////////////////////////////////
     //////////// Game state arguments
     ////////////
@@ -819,6 +986,22 @@ class scopa extends Table
         ];
     }
 
+    // Determine which values can the 7 of cups take
+    public function argCirullaDeclare()
+    {
+        $players = self::loadPlayersBasicInfos();
+        $players_joker_values = [];
+        foreach ($players as $player_id => $player) {
+            [$cards, $cirullaCombination, $joker_values] = $this->getCirullaCombinations($player_id);
+
+            if ($cirullaCombination != '') {
+                $players_joker_values[$player_id]['jokerValues'] = $joker_values;
+            }
+        }
+
+        return ['_private' => $players_joker_values];
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     //////////// Game state actions
     ////////////
@@ -826,6 +1009,10 @@ class scopa extends Table
     // Deal new cards to the table from the deck
     public function stDealStart()
     {
+        // Reset the counter of Scopa of the round
+        $sql = 'UPDATE player SET scopa_in_round = 0';
+        self::DbQuery($sql);
+
         // Move all cards to deck
         $this->cards->moveAllCardsInLocation(null, 'deck');
         $this->cards->shuffle('deck');
@@ -857,9 +1044,33 @@ class scopa extends Table
         // Notify all players about the card's table
         $this->notif_cardsOnTable();
 
-        // Reset the counter of Scopa of the round
-        $sql = 'UPDATE player SET scopa_in_round = 0';
-        self::DbQuery($sql);
+        // Cirulla: dealer scores 1 or 2 points based on table hands
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA) {
+            $dealer_id = $this->getPlayerBefore($this->getNextPlayerTable()[0]);
+
+            $seven_cups_on_table = count(array_filter($cards, function ($card) {
+                return $card['type'] == 2 && $card['type_arg'] == 7;
+            })) == 1;
+
+            $sum_cards = array_sum(array_map(function ($v) {
+                return $v['type_arg'];
+            }, $cards));
+
+            // If the sum is 15, the dealer captures all and wins a point
+            // The 7 of cup is a joker and can take any value between 1 and 10
+            // Therefore, if other cards sum up between 5 and 14, then it would win
+            if ($sum_cards == 15 || ($seven_cups_on_table && ($sum_cards-7) >= 5 && ($sum_cards-7) <= 14)) {
+                $this->playerWinsCirullaPoints($dealer_id, 'cirulla_dealer', 1, $cards, 15);
+                $this->cards->moveAllCardsInLocation('table', 'capture', null, $dealer_id);
+            }
+
+            // Same goes with 30 points
+            // If 7 of cup, then sum between 20 and 29 would work
+            elseif ($sum_cards == 30 || ($seven_cups_on_table && ($sum_cards-7) >= 20 && ($sum_cards-7) <= 29)) {
+                $this->playerWinsCirullaPoints($dealer_id, 'cirulla_dealer', 2, $cards, 30);
+                $this->cards->moveAllCardsInLocation('table', 'capture', null, $dealer_id);
+            }
+        }
 
         // Next, deal cards to each player
         $this->gamestate->nextState();
@@ -883,6 +1094,7 @@ class scopa extends Table
             SCP_VARIANT_SCOPA_A_PERDERE => 3,
             SCP_VARIANT_SCOPA_FRAC => 3,
             SCP_VARIANT_ESCOBA => 3,
+            SCP_VARIANT_CIRULLA => 3,
         ][$this->getGameStateValue('game_variant')];
         $players = self::loadPlayersBasicInfos();
         foreach ($players as $player_id => $player) {
@@ -891,8 +1103,28 @@ class scopa extends Table
         }
         $this->notif_cardsCount();
 
-        // Next, first player plays
-        $this->gamestate->nextState();
+
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA) {
+            $this->setGameStateValue('cirulla_joker_value', 7);
+            $this->gamestate->nextState('cirullaDeclare');
+        } else {
+            $this->gamestate->nextState('playerTurn');
+        }
+    }
+
+    // Determines whether some players can declare Cirulla combinations or not
+    public function stCirullaDeclare()
+    {
+        $this->gamestate->setAllPlayersMultiactive();
+
+        $players = self::loadPlayersBasicInfos();
+        foreach ($players as $player_id => $player) {
+            [$cards, $cirullaCombination, $joker_values] = $this->getCirullaCombinations($player_id);
+
+            if ($cirullaCombination == '') {
+                $this->gamestate->setPlayerNonMultiactive($player_id, '');
+            }
+        }
     }
 
     // Determines whether to distribute new cards or not
@@ -971,17 +1203,19 @@ class scopa extends Table
         if (1 == count($player_last_capture)) {
             $player_last_capture = array_pop($player_last_capture)['player_id'];
             $cards = $this->cards->getCardsInLocation('table');
-            $this->cards->moveAllCardsInLocation('table', 'capture', null, $player_last_capture);
+            if (count($cards) != 0) {
+                $this->cards->moveAllCardsInLocation('table', 'capture', null, $player_last_capture);
 
-            self::notifyAllPlayers(
-                'playerCapturesTable',
-                clienttranslate('${player_name} captures all remaining cards:<br />${cards_display}'),
-                [
-                    'player_id' => $player_last_capture,
-                    'player_name' => self::getPlayerNameById($player_last_capture),
-                    'cards_display' => $this->cardsToDisplay($cards),
-                ]
-            );
+                self::notifyAllPlayers(
+                    'playerCapturesTable',
+                    clienttranslate('${player_name} captures all remaining cards:<br />${cards_display}'),
+                    [
+                        'player_id' => $player_last_capture,
+                        'player_name' => self::getPlayerNameById($player_last_capture),
+                        'cards_display' => $this->cardsToDisplay($cards),
+                    ]
+                );
+            }
         }
 
         $cards = $this->cards->getCardsInLocation('capture');
@@ -1074,6 +1308,10 @@ class scopa extends Table
 
             case SCP_VARIANT_ESCOBA:
                 $this->scoreEscoba($cards, $score_table);
+                break;
+
+            case SCP_VARIANT_CIRULLA:
+                $this->scoreCirulla($cards, $score_table);
                 break;
         }
 
@@ -1169,16 +1407,16 @@ class scopa extends Table
     {
         // Scopa score is from DB directly
         if ($this->isTeamPlay()) {
-            $sql = 'SELECT DISTINCT team_id, player_score score, scopa_in_round FROM player';
+            $sql = 'SELECT DISTINCT team_id, player_score score, scopa_in_round, cirulla_points FROM player';
         } else {
-            $sql = 'SELECT player_id, player_score score, scopa_in_round FROM player';
+            $sql = 'SELECT player_id, player_score score, scopa_in_round, cirulla_points FROM player';
         }
         $values = self::getCollectionFromDb($sql);
 
         // Scopa points have already been added to the score, so remove them
         $score_table['previous_score'] = array_map(
             function ($v) {
-                return $v['score'] - $v['scopa_in_round'];
+                return $v['score'] - $v['scopa_in_round'] - $v['cirulla_points'];
             },
             $values
         );
@@ -1397,6 +1635,79 @@ class scopa extends Table
         }
     }
 
+    // Scores Cirulla
+    // Capturing all coins means an immediate win
+    private function scoreCirulla($cards, &$score_table)
+    {
+        // Mark scores from the beginning of the hands
+        if ($this->isTeamPlay()) {
+            $sql = 'SELECT DISTINCT team_id, cirulla_points FROM player';
+        } else {
+            $sql = 'SELECT player_id, cirulla_points FROM player';
+        }
+        $values = self::getCollectionFromDb($sql, true);
+
+        $score_table['variant'] = $values;
+
+        foreach ($values as $player_id => $points) {
+            $score_table['added_points'][$player_id] += $points;
+            $score_table['final_score'][$player_id] += $points;
+        }
+
+        // Score other combinations
+        $players = array_unique(array_map(function ($v) {
+            return $v['location_arg'];
+        }, $cards));
+
+        // Score Picolla points: A+2+3 of coin is worth 3, A+2+3+4 is worth 4, A+2+3+4+5 is worth 5, A+2+3+4+5+6 is worth 6
+        foreach ($players as $player_id) {
+            $coinsCaptured = array_filter($cards, function ($v) use ($player_id) {
+                return $v['location_arg'] == $player_id && $v['type'] == 1;
+            });
+
+            $coinsCaptured = array_values(array_map(function ($v) {
+                return (int)$v['type_arg'];
+            }, $coinsCaptured));
+
+
+            // Capture all = immediate victory
+            if (count($coinsCaptured) == 10) {
+                $this->playerWinsVariantPoints($player_id, 'cirulla_all', 100, $score_table);
+                return;
+            }
+
+            // Combinations starting with 1
+            $max_coin_captured = 0;
+            while (in_array($max_coin_captured+1, $coinsCaptured) && $max_coin_captured < 6) {
+                $max_coin_captured++;
+            }
+
+            if ($max_coin_captured > 0) {
+                break;
+            }
+        }
+
+        if ($max_coin_captured > 2) {
+            $this->playerWinsVariantPoints($player_id, 'cirulla_picolla', $max_coin_captured, $score_table, $max_coin_captured);
+        }
+
+        // Score la grande: J+K+Q of coin is worth 5
+        foreach ($players as $player_id) {
+            $coinsCaptured = array_filter($cards, function ($v) use ($player_id) {
+                return $v['location_arg'] == $player_id && $v['type'] == 1;
+            });
+
+            $coinsCaptured = array_values(array_map(function ($v) {
+                return (int)$v['type_arg'];
+            }, $coinsCaptured));
+
+            if (count(array_intersect([8, 9, 10], $coinsCaptured)) == 3) {
+                $this->playerWinsVariantPoints($player_id, 'cirulla_grande', 5, $score_table);
+                break;
+            }
+        }
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     //////////// Zombie
     ////////////
@@ -1487,6 +1798,14 @@ class scopa extends Table
 
             self::applyDbUpgradeToAllDB($sql);
         }
+        // Added possibility to play in teams
+        if ($from_version <= 2111141815) {
+            $sql = 'ALTER TABLE DBPREFIX_player ADD `cirulla_points` INT NOT NULL';
+
+            if (!self::getUniqueValueFromDB("SHOW COLUMNS FROM player LIKE 'cirulla_points'")) {
+                self::applyDbUpgradeToAllDB($sql);
+            }
+        }
     }
 
     protected function getGameName()
@@ -1508,6 +1827,8 @@ class scopa extends Table
         self::DbQuery($sql);
 
         $gameinfos = self::getGameinfos();
+        self::setGameStateInitialValue('cirulla_joker_value', 7);
+
         $default_colors = $gameinfos['player_colors'];
 
         // Create players
