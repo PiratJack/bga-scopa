@@ -1047,7 +1047,11 @@ class scopa extends Table {
     // Determine which cards can capture
     public function argPlayerTurn() {
         return [
-            'cardCaptures' => self::getCardCaptures(self::getActivePlayerId()),
+            '_private' => [
+                'active' => [
+                    'cardCaptures' => self::getCardCaptures(self::getActivePlayerId())
+                ]
+            ]
         ];
     }
 

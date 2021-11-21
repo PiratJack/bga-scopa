@@ -142,7 +142,7 @@ define([
                     case 'playerTurn':
                         // Can player select a card?
                         if (this.isCurrentPlayerActive()) {
-                            this.cardCaptures = args.args.cardCaptures;
+                            this.cardCaptures = args.args._private.cardCaptures;
                             this.displayCaptureCards();
                             this.playerCards.setSelectionMode(1);
                         } else {
