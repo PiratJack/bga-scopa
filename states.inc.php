@@ -8,7 +8,8 @@
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  */
-if (!defined('STATE_DEAL_START')) {
+if (!defined('STATE_DEAL_START'))
+{
     define('STATE_DEAL_START', 20);
     define('STATE_HAND_START', 30);
     define('STATE_CIRULLA_DECLARE', 35);

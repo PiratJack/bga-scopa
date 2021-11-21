@@ -10,15 +10,12 @@
  */
   require_once APP_BASE_PATH.'view/common/game.view.php';
 
-class view_scopa_scopa extends game_view
-{
-    public function getGameName()
-    {
+class view_scopa_scopa extends game_view {
+    public function getGameName() {
         return 'scopa';
     }
 
-    public function build_page($viewArgs)
-    {
+    public function build_page($viewArgs) {
         $this->tpl['CARDS_ON_TABLE'] = self::_('Cards on table');
         $this->tpl['MY_HAND'] = self::_('My hand');
         $this->tpl['CARD_PLAYED'] = self::_('Card played');
@@ -31,13 +28,15 @@ class view_scopa_scopa extends game_view
         $seats = ['left', 'top_left', 'right', 'top_right', 'bottom_right', 'bottom_left'];
         $this->page->begin_block("scopa_scopa", "seat");
         $this->page->begin_block("scopa_scopa", "seat_bottom");
-        foreach ($seats as $seat) {
+        foreach ($seats as $seat)
+        {
             $seat_tpl = in_array($seat, ['bottom_right', 'bottom_left'])?'seat_bottom':'seat';
             $player = array_filter($players, function ($v) use ($seat) {
                 return isset($v['seat_position']) && $v['seat_position'] == $seat;
             });
 
-            if (count($player) == 1) {
+            if (count($player) == 1)
+            {
                 $player = array_pop($player);
                 $this->page->insert_block($seat_tpl, [
                     'seat_position' => $seat,
@@ -45,7 +44,9 @@ class view_scopa_scopa extends game_view
                     'player_id' => $player['player_id'],
                     'player_name' => $player['player_name'],
                 ]);
-            } else {
+            }
+            else
+            {
                 $this->page->insert_block($seat_tpl, [
                     'seat_position' => $seat,
                     'style' => 'visibility: hidden;',
