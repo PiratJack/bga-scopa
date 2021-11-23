@@ -380,7 +380,14 @@ class scopa extends Table {
         }
         elseif (($sum_cards - 7) < 10 && $seven_cups_in_hand)
         {
-            $joker_values = range(1, 9 - ($sum_cards - 7));
+            if (($sum_cards - 7) == 9)
+            {
+                $joker_values = [1];
+            }
+            else
+            {
+                $joker_values = range(1, 9 - ($sum_cards - 7));
+            }
             $cirullaCombination = 'cirulla_less_than_10';
         }
 
@@ -720,7 +727,7 @@ class scopa extends Table {
         $win_types = [
             'cirulla_dealer' => clienttranslate('The table cards sum to ${sum_cards}. ${player_name} marks ${nb_points} point(s) and captures them: <br />${cards_display}'),
             'cirulla_less_than_10' => clienttranslate('${player_name} has 3 cards summing less than 10 and marks 3 points: <br />${cards_display}'),
-            'cirulla_three_kind' => clienttranslate('${player_name} has a three of a kind and marks 5 points: <br />${cards_display}'),
+            'cirulla_three_kind' => clienttranslate('${player_name} has a three of a kind and marks 10 points: <br />${cards_display}'),
         ];
         self::notifyAllPlayers(
             'message',
@@ -1020,7 +1027,7 @@ class scopa extends Table {
         }
         elseif ($cirullaCombination == 'cirulla_three_kind')
         {
-            $nb_points = 5;
+            $nb_points = 10;
         }
         $this->playerWinsCirullaPoints($player_id, $cirullaCombination, $nb_points, $cards);
 
@@ -1135,6 +1142,13 @@ class scopa extends Table {
             {
                 $this->playerWinsCirullaPoints($dealer_id, 'cirulla_dealer', 1, $cards, 15);
                 $this->cards->moveAllCardsInLocation('table', 'capture', null, $dealer_id);
+                self::notifyAllPlayers(
+                    'playerCapturesTable',
+                    '',
+                    [
+                        'player_id' => $dealer_id,
+                    ]
+                );
             }
 
             // Same goes with 30 points
@@ -1143,6 +1157,13 @@ class scopa extends Table {
             {
                 $this->playerWinsCirullaPoints($dealer_id, 'cirulla_dealer', 2, $cards, 30);
                 $this->cards->moveAllCardsInLocation('table', 'capture', null, $dealer_id);
+                self::notifyAllPlayers(
+                    'playerCapturesTable',
+                    '',
+                    [
+                        'player_id' => $dealer_id,
+                    ]
+                );
             }
         }
 
