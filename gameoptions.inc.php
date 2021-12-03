@@ -189,7 +189,6 @@ $game_options = [
             ],
             SCP_VARIANT_NAPOLA_ENABLED_NO => [
                 'name' => totranslate('Disabled'),
-                'tmdisplay' => '',
             ],
         ],
         'default' => SCP_VARIANT_NAPOLA_ENABLED_NO,
@@ -240,10 +239,13 @@ $game_preferences = [
         'name' => totranslate('Card deck'),
         'needReload' => false, // Handled through JS directly
         'values' => [
-            SCP_PREF_CARD_DECK_ITALIAN => [ 'name' => totranslate('Napolitan') ],
-            SCP_PREF_CARD_DECK_STANDARD => [ 'name' => totranslate('Standard') ]
+            SCP_PREF_CARD_DECK_NAPOLITAN => [ 'name' => totranslate('Naepolitan') ],
+            SCP_PREF_CARD_DECK_STANDARD => [ 'name' => totranslate('Standard') ],
+            SCP_PREF_CARD_DECK_BERGAMASCHE => [ 'name' => totranslate('Bergamasche') ],
+            SCP_PREF_CARD_DECK_BRESCIANE => [ 'name' => totranslate('Bresciane') ],
+            SCP_PREF_CARD_DECK_PIACENTINE => [ 'name' => totranslate('Piacentine') ],
         ],
-        'default' => SCP_PREF_CARD_DECK_ITALIAN
+        'default' => SCP_PREF_CARD_DECK_NAPOLITAN
     ],
     SCP_PREF_AUTO_PLAY => [
         'name' => totranslate('Auto-play last card?'),

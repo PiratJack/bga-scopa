@@ -90,8 +90,20 @@
     background-image: url('img/cards_standard.jpg') !important;
 }
 
-.scp_italian_deck {
-    background-image: url('img/cards_italian.jpg') !important;
+.scp_napolitan_deck {
+    background-image: url('img/cards_napolitan.jpg') !important;
+}
+
+.scp_bergamasche_deck {
+    background-image: url('img/cards_bergamasche.jpg') !important;
+}
+
+.scp_bresciane_deck {
+    background-image: url('img/cards_bresciane.jpg') !important;
+}
+
+.scp_piacentine_deck {
+    background-image: url('img/cards_piacentine.jpg') !important;
 }
 
 /* Card in capture group */

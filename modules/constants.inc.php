@@ -53,8 +53,12 @@ if (!defined('SCP_VARIANT_SCOPA'))
     define('SCP_PREF_DISPLAY_LABELS_NO', 2);
 
     define('SCP_PREF_CARD_DECK', 101);
-    define('SCP_PREF_CARD_DECK_ITALIAN', 1);
+    define('SCP_PREF_CARD_DECK_NAPOLITAN', 1);
     define('SCP_PREF_CARD_DECK_STANDARD', 2);
+    define('SCP_PREF_CARD_DECK_BERGAMASCHE', 3);
+    define('SCP_PREF_CARD_DECK_BRESCIANE', 4);
+    define('SCP_PREF_CARD_DECK_PIACENTINE', 5);
+
 
     define('SCP_PREF_AUTO_PLAY', 102);
     define('SCP_PREF_AUTO_PLAY_YES', 1);

@@ -24,7 +24,7 @@ define([
                 this.dontPreloadImage('cards_standard.jpg');
                 this.dontPreloadImage('cards_italian.jpg');
 
-                this.deckCardClasses = ['scp_standard_deck', 'scp_italian_deck'];
+                this.deckCardClasses = ['scp_napolitan_deck', 'scp_standard_deck', 'scp_bergamasche_deck', 'scp_bresciane_deck', 'scp_piacentine_deck'];
 
                 dojo.connect(window, 'resize', () => this.resizeBoard());
             },
@@ -689,11 +689,9 @@ define([
             },*/
 
             getCardDeckClass: function() {
-                var val = $('preference_control_101').value;
-                if (val === "1") {
-                    return 'scp_italian_deck';
-                } else if (val === "2") {
-                    return 'scp_standard_deck';
+                var val = parseInt($('preference_control_101').value);
+                if (val > 0 && val <= this.deckCardClasses.length) {
+                    return this.deckCardClasses[val - 1];
                 } else {
                     return 'scp_italian_deck';
                 }
