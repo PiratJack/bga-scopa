@@ -82,7 +82,7 @@
 
 /* Cards (except player's card) */
 .scp_card {
-    background-size: 1000%;
+    background-size: 1000% 400%;
 }
 
 /* Card faces */

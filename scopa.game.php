@@ -1088,6 +1088,7 @@ class scopa extends Table {
         // Reset the counter of Scopa of the round
         $sql = 'UPDATE player SET scopa_in_round = 0';
         self::DbQuery($sql);
+        $this->notif_playerScores();
 
         // Move all cards to deck
         $this->cards->moveAllCardsInLocation(null, 'deck');
