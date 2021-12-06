@@ -1213,17 +1213,12 @@ class scopa extends Table {
 
     // Determines whether some players can declare Cirulla combinations or not
     public function stCirullaDeclare() {
-        $this->gamestate->setAllPlayersMultiactive();
+        $player_id = self::getActivePlayerId();
+        [$cards, $cirullaCombination, $joker_values] = $this->getCirullaCombinations($player_id);
 
-        $players = self::loadPlayersBasicInfos();
-        foreach ($players as $player_id => $player)
+        if ($cirullaCombination == '')
         {
-            [$cards, $cirullaCombination, $joker_values] = $this->getCirullaCombinations($player_id);
-
-            if ($cirullaCombination == '')
-            {
-                $this->gamestate->setPlayerNonMultiactive($player_id, '');
-            }
+            $this->gamestate->nextState('');
         }
     }
 
@@ -1237,7 +1232,13 @@ class scopa extends Table {
         {
             $next_player_id = self::activeNextPlayer();
             self::giveExtraTime($next_player_id);
-            if ($this->getPlayerAutoPlay($next_player_id) == SCP_PREF_AUTO_PLAY_YES)
+            $next_player_cards = $this->cards->getCardsInLocation('hand', $next_player_id);
+
+            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA && count($next_player_cards) == 3)
+            {
+                $this->gamestate->nextState('cirullaDeclare');
+            }
+            elseif ($this->getPlayerAutoPlay($next_player_id) == SCP_PREF_AUTO_PLAY_YES)
             {
                 $this->gamestate->nextState('autoPlayerTurn');
             }

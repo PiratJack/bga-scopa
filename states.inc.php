@@ -53,9 +53,9 @@ $machinestates = [
     /// Declare Cirulla combinations
     STATE_CIRULLA_DECLARE => [
         'name' => 'cirullaDeclare',
-        'description' => clienttranslate('Other players may declare a Cirulla combination'),
+        'description' => clienttranslate('${actplayer} must play a card'),
         'descriptionmyturn' => clienttranslate('${you} may declare a Cirulla combination or Pass'),
-        'type' => 'multipleactiveplayer',
+        'type' => 'activeplayer',
         'action' => 'stCirullaDeclare',
         'args' => 'argCirullaDeclare',
         'possibleactions' => ['cirullaDeclare', 'cirullaPass'],
@@ -80,8 +80,7 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stNextPlayer',
         'updateGameProgression' => true,
-        'possibleactions' => ['playerTurn', 'autoPlayerTurn', 'handEnd'],
-        'transitions' => ['playerTurn' => STATE_PLAYER_TURN, 'autoPlayerTurn' => STATE_AUTO_PLAYER, 'handEnd' => STATE_HAND_END],
+        'transitions' => ['playerTurn' => STATE_PLAYER_TURN, 'autoPlayerTurn' => STATE_AUTO_PLAYER, 'handEnd' => STATE_HAND_END, 'cirullaDeclare' => STATE_CIRULLA_DECLARE],
     ],
 
     // Switch to next player
@@ -91,7 +90,6 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stAutoPlayer',
         'updateGameProgression' => true,
-        'possibleactions' => ['playerTurn', 'playCard'],
         'transitions' => ['playerTurn' => STATE_PLAYER_TURN, 'playCard' => STATE_NEXT_PLAYER],
     ],
 
@@ -102,7 +100,6 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stHandEnd',
         'updateGameProgression' => true,
-        'possibleactions' => ['handStart', 'deckEnd'],
         'transitions' => ['handStart' => STATE_HAND_START, 'deckEnd' => STATE_DECK_END],
     ],
 
