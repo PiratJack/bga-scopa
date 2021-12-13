@@ -1002,7 +1002,7 @@ class scopa extends Table {
         self::checkAction('cirullaPass');
         $player_id = self::getCurrentPlayerId();
 
-        $this->gamestate->setPlayerNonMultiactive($player_id, '');
+        $this->gamestate->nextState('');
     }
 
     // Cirulla: Declare the combination
@@ -1043,7 +1043,7 @@ class scopa extends Table {
             );
         }
 
-        $this->gamestate->setPlayerNonMultiactive($player_id, '');
+        $this->gamestate->nextState('');
     }
 
 
