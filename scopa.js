@@ -592,6 +592,8 @@ define([
                     var prefId = +match[1];
                     var prefValue = +e.target.value;
                     _this.prefs[prefId].value = prefValue;
+                    dojo.query('#preference_control_' + prefId)[0].value = prefValue;
+                    dojo.query('#preference_fontrol_' + prefId)[0].value = prefValue;
                     _this.onPreferenceChange(prefId, prefValue);
                 }
 
