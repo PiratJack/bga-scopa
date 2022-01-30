@@ -1029,7 +1029,14 @@ class scopa extends Table {
         {
             $nb_points = 10;
         }
-        $this->playerWinsCirullaPoints($player_id, $cirullaCombination, $nb_points, $cards);
+        if ($this->isTeamPlay())
+        {
+            $this->playerWinsCirullaPoints($this->getPlayerTeam($player_id), $cirullaCombination, $nb_points, $cards);
+        }
+        else
+        {
+            $this->playerWinsCirullaPoints($player_id, $cirullaCombination, $nb_points, $cards);
+        }
 
         if ($joker_values != [])
         {
