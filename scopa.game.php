@@ -1895,7 +1895,7 @@ class scopa extends Table {
     public function zombieTurn($state, $active_player) {
         $statename = $state['name'];
 
-        if ('activeplayer' === $state['type'])
+        if ($statename === 'playerTurn')
         {
             // Choose which card to play
             $cards = $this->cards->getCardsInLocation('hand', $active_player);
@@ -1929,6 +1929,11 @@ class scopa extends Table {
 
             $this->playCard($card['id'], $capture);
 
+            return;
+        }
+        else
+        {
+            $this->gamestate->nextState('');
             return;
         }
 
