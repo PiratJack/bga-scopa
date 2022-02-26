@@ -22,6 +22,7 @@ class scopa extends Table {
                 'game_variant' => SCP_VARIANT,
                 'napola_variant' => SCP_VARIANT_NAPOLA_ENABLED,
                 'team_play' => SCP_TEAM_PLAY,
+                'who_captures_remaining' => SCP_WHO_CAPTURES_REMAINING,
 
                 'cirulla_joker_value' => SCP_GLOBAL_CIRULLA_JOKER_VALUE,
             ]
@@ -1316,28 +1317,41 @@ class scopa extends Table {
         // Sends a pause to process any pending event / animation
         self::notifyAllPlayers('simplePause', '', ['time' => 2000]);
 
-        // Give the remaining cards to the player who captured last
-        $sql = 'SELECT player_id FROM player WHERE has_last_captured = TRUE';
-        $player_last_capture = self::getCollectionFromDB($sql);
-        if (1 == count($player_last_capture))
+        // Give the remaining cards to one of the players (depending on option)
+        if ($this->getGameStateValue('who_captures_remaining') == SCP_WHO_CAPTURES_REMAINING_CAPTURER)
         {
-            $player_last_capture = array_pop($player_last_capture)['player_id'];
-            $cards = $this->cards->getCardsInLocation('table');
-            if (count($cards) != 0)
+            $sql = 'SELECT player_id FROM player WHERE has_last_captured = TRUE';
+            $player_last_capture = self::getCollectionFromDB($sql);
+            if (1 == count($player_last_capture))
             {
-                $this->cards->moveAllCardsInLocation('table', 'capture', null, $player_last_capture);
-
-                self::notifyAllPlayers(
-                    'playerCapturesTable',
-                    clienttranslate('${player_name} captures all remaining cards:<br />${cards_display}'),
-                    [
-                        'player_id' => $player_last_capture,
-                        'player_name' => self::getPlayerNameById($player_last_capture),
-                        'cards_display' => $this->cardsToDisplay($cards),
-                    ]
-                );
+                $player_taking_cards = array_pop($player_last_capture)['player_id'];
+            }
+            else
+            {
+                throw new BgaVisibleSystemException(self::_('Database error - Multiple players captured last'));
             }
         }
+        else
+        {
+            $player_taking_cards = $this->getActivePlayerId();
+        }
+
+        $cards = $this->cards->getCardsInLocation('table');
+        if (count($cards) != 0)
+        {
+            $this->cards->moveAllCardsInLocation('table', 'capture', null, $player_taking_cards);
+
+            self::notifyAllPlayers(
+                'playerCapturesTable',
+                clienttranslate('${player_name} captures all remaining cards:<br />${cards_display}'),
+                [
+                    'player_id' => $player_taking_cards,
+                    'player_name' => self::getPlayerNameById($player_taking_cards),
+                    'cards_display' => $this->cardsToDisplay($cards),
+                ]
+            );
+        }
+
 
         $cards = $this->cards->getCardsInLocation('capture');
         $players = $this->loadPlayersBasicInfosWithTeam();

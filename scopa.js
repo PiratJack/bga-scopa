@@ -624,7 +624,7 @@ define([
                             dojo.query('.scp_card_label').addClass('scp_hidden')
                         break;
 
-                        // Card deck theme
+                    // Card deck theme
                     case 101:
                         // Remove all existing classes
                         for (i in this.deckCardClasses) {
@@ -648,7 +648,7 @@ define([
                         }*/
                         break;
 
-                        // Display opponents
+                    // Display opponents
                     case 103:
                         // Yes, display them
                         if (prefValue == 1) {
@@ -663,6 +663,22 @@ define([
                             dojo.query('body').addClass('scp_players_hidden');
                             dojo.query('#scp_board').removeClass('scp_players_visible');
                             dojo.query('#scp_board').addClass('scp_players_hidden');
+                        }
+                        this.resizeBoard();
+                        break;
+
+
+                    // Display information banner
+                    case 104:
+                        // Yes, display it
+                        if (prefValue == 1) {
+                            dojo.query('body').removeClass('scp_notice_hidden'); /* Ensure styles are applied everywhere */
+                            dojo.query('body').addClass('scp_notice_visible');
+                        }
+                        // No, hide it
+                        else {
+                            dojo.query('body').removeClass('scp_notice_visible');
+                            dojo.query('body').addClass('scp_notice_hidden');
                         }
                         this.resizeBoard();
                         break;

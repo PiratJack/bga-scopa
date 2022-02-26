@@ -281,6 +281,12 @@
     display: none;
 }
 
+/*** Notice banner is hidden ***/
+
+.scp_notice_hidden #scp_notice {
+    display: none;
+}
+
 
 
 /****************** Sizes definitions ******************/

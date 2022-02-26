@@ -46,6 +46,10 @@ if (!defined('SCP_VARIANT_SCOPA'))
     define('SCP_TEAM_PLAY_YES', 1);
     define('SCP_TEAM_PLAY_NO', 2);
 
+    define('SCP_WHO_CAPTURES_REMAINING', 105);
+    define('SCP_WHO_CAPTURES_REMAINING_CAPTURER', 1);
+    define('SCP_WHO_CAPTURES_REMAINING_DEALER', 2);
+
 
 
     define('SCP_PREF_DISPLAY_LABELS', 100);
@@ -59,7 +63,6 @@ if (!defined('SCP_VARIANT_SCOPA'))
     define('SCP_PREF_CARD_DECK_BRESCIANE', 4);
     define('SCP_PREF_CARD_DECK_PIACENTINE', 5);
 
-
     define('SCP_PREF_AUTO_PLAY', 102);
     define('SCP_PREF_AUTO_PLAY_YES', 1);
     define('SCP_PREF_AUTO_PLAY_NO', 2);
@@ -67,6 +70,10 @@ if (!defined('SCP_VARIANT_SCOPA'))
     define('SCP_PREF_DISPLAY_PLAYERS', 103);
     define('SCP_PREF_DISPLAY_PLAYERS_YES', 1);
     define('SCP_PREF_DISPLAY_PLAYERS_NO', 2);
+
+    define('SCP_PREF_DISPLAY_NOTICE', 104);
+    define('SCP_PREF_DISPLAY_NOTICE_YES', 1);
+    define('SCP_PREF_DISPLAY_NOTICE_NO', 2);
 
 
     define('SCP_GLOBAL_CIRULLA_JOKER_VALUE', 10);

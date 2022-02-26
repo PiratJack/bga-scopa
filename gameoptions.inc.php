@@ -222,6 +222,18 @@ $game_options = [
         'notdisplayedmessage' => totranslate('Playing in teams is possible only with 4 or 6 players.'),
         'default' => SCP_TEAM_PLAY_NO,
     ],
+    SCP_WHO_CAPTURES_REMAINING => [
+        'name' => totranslate('Which player should capture the remaining cards?'),
+        'values' => [
+            SCP_WHO_CAPTURES_REMAINING_CAPTURER => [
+                'name' => totranslate('The last player to capture a card'),
+            ],
+            SCP_WHO_CAPTURES_REMAINING_DEALER => [
+                'name' => totranslate('The dealer (who plays last)'),
+            ],
+        ],
+        'default' => SCP_WHO_CAPTURES_REMAINING_CAPTURER,
+    ],
 ];
 
 
@@ -264,5 +276,14 @@ $game_preferences = [
             SCP_PREF_DISPLAY_PLAYERS_NO => [ 'name' => totranslate('No') ]
         ],
         'default' => SCP_PREF_DISPLAY_PLAYERS_NO
+    ],
+    SCP_PREF_DISPLAY_NOTICE => [
+        'name' => totranslate('Display information banner at the top?'),
+        'needReload' => false, // Handled through JS directly
+        'values' => [
+            SCP_PREF_DISPLAY_NOTICE_YES => [ 'name' => totranslate('Yes') ],
+            SCP_PREF_DISPLAY_NOTICE_NO => [ 'name' => totranslate('No') ]
+        ],
+        'default' => SCP_PREF_DISPLAY_NOTICE_YES
     ],
 ];

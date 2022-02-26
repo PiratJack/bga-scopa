@@ -11,6 +11,13 @@
 -->
 <div id="scp_board">
 
+    <div class="whiteblock scp_notice" id="scp_notice">
+        {VARIANT_MESSAGE}<br />
+        {NAPOLA_MESSAGE}<br />
+        <i>{HIDE_MESSAGE}</i><br />
+        <i>{OPTIONS_MESSAGE}</i>
+    </div>
+
     <!-- BEGIN seat -->
     <div class="whiteblock scp_player_seat scp_player_seat_{seat_position}" style="{style}" id="scp_player_seat_{player_id}">
         <h3>{player_name}</h3>
