@@ -624,7 +624,7 @@ define([
                             dojo.query('.scp_card_label').addClass('scp_hidden')
                         break;
 
-                    // Card deck theme
+                        // Card deck theme
                     case 101:
                         // Remove all existing classes
                         for (i in this.deckCardClasses) {
@@ -648,7 +648,7 @@ define([
                         }*/
                         break;
 
-                    // Display opponents
+                        // Display opponents
                     case 103:
                         // Yes, display them
                         if (prefValue == 1) {
@@ -668,7 +668,7 @@ define([
                         break;
 
 
-                    // Display information banner
+                        // Display information banner
                     case 104:
                         // Yes, display it
                         if (prefValue == 1) {

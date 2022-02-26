@@ -393,7 +393,8 @@
 
     /** All elements take the full width **/
     #scp_table,
-    #scp_myhand {
+    #scp_myhand,
+    #scp_capturechoice {
         width: auto !important;
         float: none;
         clear: both;
