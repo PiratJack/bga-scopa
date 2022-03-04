@@ -23,6 +23,9 @@ define([
 
                 this.dontPreloadImage('cards_standard.jpg');
                 this.dontPreloadImage('cards_italian.jpg');
+                this.dontPreloadImage('cards_bergamasche.jpg');
+                this.dontPreloadImage('cards_bresciane.jpg');
+                this.dontPreloadImage('cards_piacentine.jpg');
 
                 this.deckCardClasses = ['scp_napolitan_deck', 'scp_standard_deck', 'scp_bergamasche_deck', 'scp_bresciane_deck', 'scp_piacentine_deck'];
 

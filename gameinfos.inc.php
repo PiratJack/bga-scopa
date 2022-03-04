@@ -23,7 +23,7 @@ $gameinfos = [
     // Game in public domain
     'publisher' => '',
     'publisher_website' => '',
-    'publisher_bgg_id' => 0,
+    'publisher_bgg_id' => 171,
 
     'bgg_id' => 15889,
 
