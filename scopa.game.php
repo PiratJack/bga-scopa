@@ -257,10 +257,10 @@ class scopa extends Table {
                     )
                 );
             }
-            // If all captures are allowed, just return them
+            // If all captures are allowed, just apply array_values
             elseif ($allow_all_captures)
             {
-                return $possible_actions;
+                $possible_actions[$card_id] = array_values($combinations);
             }
             // In regular play, it's possible to capture only the minimum number of cards
             else

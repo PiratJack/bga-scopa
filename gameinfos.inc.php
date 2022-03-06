@@ -21,7 +21,7 @@ $gameinfos = [
     'year' => 1600,
 
     // Game in public domain
-    'publisher' => '',
+    'publisher' => '(Public Domain)',
     'publisher_website' => '',
     'publisher_bgg_id' => 171,
 
