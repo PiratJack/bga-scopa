@@ -234,6 +234,26 @@ $game_options = [
         ],
         'default' => SCP_WHO_CAPTURES_REMAINING_CAPTURER,
     ],
+    SCP_MULTIPLE_CAPTURES => [
+        'name' => totranslate('If multiple combinations of cards can be captured:'),
+        'values' => [
+            SCP_MULTIPLE_CAPTURES_ALLOW_LOWEST => [
+                'name' => totranslate('Allow only the lowest number of cards to be captured'),
+            ],
+            SCP_MULTIPLE_CAPTURES_ALLOW_ALL => [
+                'name' => totranslate('Allow any combination to be captured'),
+            ],
+        ],
+        'displaycondition' => [
+            [
+                'type' => 'otheroptionisnot',
+                'id' => SCP_VARIANT,
+                'value' => [SCP_VARIANT_SCOPA_FRAC, SCP_VARIANT_CIRULLA],
+            ],
+        ],
+        'notdisplayedmessage' => totranslate('Frac and Cirulla allow any combination to be captured'),
+        'default' => SCP_MULTIPLE_CAPTURES_ALLOW_LOWEST,
+    ],
 ];
 
 

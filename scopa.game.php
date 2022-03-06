@@ -23,6 +23,7 @@ class scopa extends Table {
                 'napola_variant' => SCP_VARIANT_NAPOLA_ENABLED,
                 'team_play' => SCP_TEAM_PLAY,
                 'who_captures_remaining' => SCP_WHO_CAPTURES_REMAINING,
+                'multiple_captures' => SCP_MULTIPLE_CAPTURES,
 
                 'cirulla_joker_value' => SCP_GLOBAL_CIRULLA_JOKER_VALUE,
             ]
@@ -191,7 +192,7 @@ class scopa extends Table {
         }
 
         // Keep only the combination that has the smallest number of cards
-        // In Scopa Frac & Cirulla, we can capture as many cards as wanted (not only the minimum number)
+        // In Scopa Frac & Cirulla OR with the "multiple captures" option, we can capture as many cards as wanted (not only the minimum number)
         if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA_FRAC, SCP_VARIANT_CIRULLA]))
         {
             foreach ($possible_actions as $card_id => $combinations)
@@ -226,16 +227,18 @@ class scopa extends Table {
                     $combinations
                 )
             );
+
+            $allow_all_captures = $this->getGameStateValue('multiple_captures') == SCP_MULTIPLE_CAPTURES_ALLOW_ALL;
             // array_values forces a re-indexing, which means Javascript will see it as an array and not an object
 
-            // In Asso piglia tutto (simplified) and Cirulla, Aces capture everything
-            if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_CIRULLA, SCP_VARIANT_ASSO_PIGLIA_TUTTO]))
+            // In Asso piglia tutto (simplified), Aces capture everything
+            if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_ASSO_PIGLIA_TUTTO]))
             {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
                         $combinations,
-                        function ($value) use ($min_cards, $hand, $table, $card_id) {
-                            return ($hand[$card_id]['type_arg'] == 1) ? $value['size'] == count($table) : $value['size'] == $min_cards;
+                        function ($value) use ($min_cards, $hand, $table, $card_id, $allow_all_captures) {
+                            return ($hand[$card_id]['type_arg'] == 1) ? $value['size'] == count($table) : ($value['size'] == $min_cards || $allow_all_captures);
                         }
                     )
                 );
@@ -248,12 +251,18 @@ class scopa extends Table {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
                         $combinations,
-                        function ($value) use ($min_cards, $hand, $table, $card_id, $ace_captures_all) {
-                            return ($hand[$card_id]['type_arg'] == 1 && $ace_captures_all) ? $value['size'] == count($table) : $value['size'] == $min_cards;
+                        function ($value) use ($min_cards, $hand, $table, $card_id, $ace_captures_all, $allow_all_captures) {
+                            return ($hand[$card_id]['type_arg'] == 1 && $ace_captures_all) ? $value['size'] == count($table) : ($value['size'] == $min_cards || $allow_all_captures);
                         }
                     )
                 );
-            } // In regular play, it's possible to capture only the minimum number of cards
+            }
+            // If all captures are allowed, just return them
+            elseif ($allow_all_captures)
+            {
+                return $possible_actions;
+            }
+            // In regular play, it's possible to capture only the minimum number of cards
             else
             {
                 $possible_actions[$card_id] = array_values(
