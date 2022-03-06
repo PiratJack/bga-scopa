@@ -271,7 +271,7 @@ define([
                     var waiting_zone = source;
 
                 var cardPlayed = this.renderCard(card, source);
-                var cardCreate = this.slideToObject(cardPlayed, waiting_zone, 750);
+                var cardCreate = this.slideToObject(cardPlayed, waiting_zone, 750 / this.animationSpeed);
 
 
                 if (this.isCurrentPlayerActive() || this.player_id == playerId)
@@ -282,7 +282,7 @@ define([
 
                 // Card played towards table
                 if (captures == undefined) {
-                    var cardToTable = this.slideToObject(cardPlayed, 'scp_tablehandcards', 750);
+                    var cardToTable = this.slideToObject(cardPlayed, 'scp_tablehandcards', 750 / this.animationSpeed);
                     dojo.connect(cardToTable, 'onEnd', (node) => {
                         dojo.destroy(node);
                         this.tableCards.addToStockWithId(card.face_id, card.id);
@@ -295,14 +295,14 @@ define([
                     for (i in captures) {
                         var cardCaptured = captures[i];
                         var cardCapturedDiv = this.renderCard(cardCaptured, 'scp_tablehandcards_item_' + cardCaptured.id);
-                        var cardCapturedAnim = this.slideToObject(cardCapturedDiv, waiting_zone, 750);
+                        var cardCapturedAnim = this.slideToObject(cardCapturedDiv, waiting_zone, 750 / this.animationSpeed);
                         dojo.connect(cardCapturedAnim, 'onEnd', dojo.destroy);
                         dojo.connect(cardCapturedAnim, 'beforeBegin', (node) => this.tableCards.removeFromStockById(node.dataset.card));
                         animations.push(cardCapturedAnim);
                     }
 
                     // Card collected by player
-                    var cardCapture = this.slideToObject(cardPlayed, source, 750);
+                    var cardCapture = this.slideToObject(cardPlayed, source, 750 / this.animationSpeed);
                     dojo.connect(cardCapture, 'onEnd', dojo.destroy);
                     animations.push(cardCapture);
                 }
@@ -615,6 +615,7 @@ define([
             },
 
             onPreferenceChange: function(prefId, prefValue) {
+                debugger;
                 // Preferences that change display
                 switch (prefId) {
                     // Display labels on cards?
@@ -685,6 +686,11 @@ define([
                         }
                         this.resizeBoard();
                         break;
+
+                        // Animation speed
+                    case 105:
+                        this.animationSpeed = prefValue;
+                        break;
                 }
 
                 // Preferences that need to be sent to server (only if needed in PHP code)
@@ -732,10 +738,10 @@ define([
             // Notification setup
             setupNotifications: function() {
                 dojo.subscribe('cardPlayedToTable', this, 'notif_cardPlayedToTable');
-                this.notifqueue.setSynchronous('cardPlayedToTable', 2500);
+                this.notifqueue.setSynchronous('cardPlayedToTable', 2500 / this.animationSpeed);
 
                 dojo.subscribe('cardPlayedAndCapture', this, 'notif_cardPlayedAndCapture');
-                this.notifqueue.setSynchronous('cardPlayedAndCapture', 4500);
+                this.notifqueue.setSynchronous('cardPlayedAndCapture', 4500 / this.animationSpeed);
 
                 dojo.subscribe('cardsCount', this, 'notif_cardsCount');
 
@@ -746,7 +752,7 @@ define([
                 dojo.subscribe('playerScores', this, 'notif_playerScores');
 
                 dojo.subscribe('playerCapturesTable', this, 'notif_playerCapturesTable');
-                this.notifqueue.setSynchronous('playerCapturesTable', 2000);
+                this.notifqueue.setSynchronous('playerCapturesTable', 2000 / this.animationSpeed);
             },
 
             // A player played a card towards the table

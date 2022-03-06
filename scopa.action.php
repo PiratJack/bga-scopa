@@ -79,7 +79,7 @@ class action_scopa extends APP_GameAction {
             case SCP_PREF_AUTO_PLAY:
                 if (!in_array($pref_value, [SCP_PREF_AUTO_PLAY_YES,SCP_PREF_AUTO_PLAY_NO]))
                 {
-                    throw new BgaUserException('Wrong value for user preference '.$pref_id);
+                    throw new BgaUserException(str_replace('${pref_id}', $pref_id, self::_('Wrong value for user preference ${pref_id}')));
                 }
             break;
         }

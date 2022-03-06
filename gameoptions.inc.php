@@ -306,4 +306,14 @@ $game_preferences = [
         ],
         'default' => SCP_PREF_DISPLAY_NOTICE_YES
     ],
+    SCP_PREF_ANIMATION_SPEED => [
+        'name' => totranslate('Animation speed'),
+        'needReload' => false, // Handled through JS directly
+        'values' => [
+            SCP_PREF_ANIMATION_SPEED_1 => [ 'name' => totranslate('Slow') ],
+            SCP_PREF_ANIMATION_SPEED_2 => [ 'name' => totranslate('Fast') ],
+            SCP_PREF_ANIMATION_SPEED_25 => [ 'name' => totranslate('Lightning fast') ]
+        ],
+        'default' => SCP_PREF_ANIMATION_SPEED_1
+    ],
 ];

@@ -79,6 +79,11 @@ if (!defined('SCP_VARIANT_SCOPA'))
     define('SCP_PREF_DISPLAY_NOTICE_YES', 1);
     define('SCP_PREF_DISPLAY_NOTICE_NO', 2);
 
+    define('SCP_PREF_ANIMATION_SPEED', 105);
+    define('SCP_PREF_ANIMATION_SPEED_1', 1);
+    define('SCP_PREF_ANIMATION_SPEED_2', 2);
+    define('SCP_PREF_ANIMATION_SPEED_25', 25);
+
 
     define('SCP_GLOBAL_CIRULLA_JOKER_VALUE', 10);
 }

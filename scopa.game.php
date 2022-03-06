@@ -1053,7 +1053,7 @@ class scopa extends Table {
             $this->setGameStateValue('cirulla_joker_value', $selected_joker_value);
             self::notifyAllPlayers(
                 'message',
-                'The 7 of cups is now a/an ${nb_points} for the purpose of capturing cards.',
+                clienttranslate('The 7 of cups is now a/an ${nb_points} for the purpose of capturing cards.'),
                 [
                     'nb_points' => $this->values_label[$selected_joker_value],
                 ]
