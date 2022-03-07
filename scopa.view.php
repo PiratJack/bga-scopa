@@ -35,10 +35,10 @@ class view_scopa_scopa extends game_view {
 
         // Napola notice at top of the board
         $napola_value = $this->game->getGameStateValue('napola_variant');
-        $napola_enabled = $game_options[SCP_VARIANT_NAPOLA_ENABLED]['values'][$napola_value];
         if ($napola_value == SCP_VARIANT_NAPOLA_ENABLED_YES)
         {
-            $this->tpl['NAPOLA_MESSAGE'] = str_replace('${rules}', $napola_enabled['description'], self::_('The Napola variant is enabled. ${rules}'));
+            $napola_infos = $game_options[SCP_VARIANT_NAPOLA_ENABLED]['values'][$napola_value];
+            $this->tpl['NAPOLA_MESSAGE'] = str_replace('${rules}', $napola_infos['description'], self::_('The Napola variant is enabled. ${rules}'));
         }
         else
         {
