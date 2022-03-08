@@ -149,7 +149,7 @@ define([
                             this.displayCaptureCards();
                             this.playerCards.setSelectionMode(1);
                         } else {
-                            this.hideCaptureCards();
+                            this.hideCaptureTooltip();
                             this.playerCards.setSelectionMode(0);
                         }
                         this.hideCaptureOptions();
@@ -435,7 +435,7 @@ define([
             },
 
             // Hides tooltip & dotted border based on which cards can capture
-            hideCaptureCards: function() {
+            hideCaptureTooltip: function() {
                 // Note: we can't remove tooltips, so it's just set to nothing
                 this.addTooltipToClass('scp_canCapture', '', '');
                 dojo.query('.scp_canCapture').removeClass('scp_canCapture');
@@ -493,6 +493,7 @@ define([
                 }
                 // Card can't capture, just sent it to server
                 else {
+                    this.hideCaptureTooltip();
                     this.ajaxcall('/scopa/scopa/playCard.html', {
                         cardId: cardId,
                         cardsCaptured: '',
@@ -519,6 +520,7 @@ define([
                 if (cardId in this.cardCaptures && this.cardCaptures[cardId].length > 1) {
                     var capture = evt.currentTarget.dataset.cards;
 
+                    this.hideCaptureTooltip();
                     this.ajaxcall('/scopa/scopa/playCard.html', {
                         cardId: cardId,
                         cardsCaptured: capture,
@@ -530,6 +532,7 @@ define([
                 // Card can't capture, just sent it to server
                 // This shouldn't happen (as the capture groups won't be displayed)
                 else {
+                    this.hideCaptureTooltip();
                     this.ajaxcall('/scopa/scopa/playCard.html', {
                         cardId: cardId,
                         cardsCaptured: '',
@@ -615,7 +618,6 @@ define([
             },
 
             onPreferenceChange: function(prefId, prefValue) {
-                debugger;
                 // Preferences that change display
                 switch (prefId) {
                     // Display labels on cards?
