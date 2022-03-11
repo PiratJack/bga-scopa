@@ -86,7 +86,7 @@ class scopa extends Table {
         $possible_actions = [];
 
         // In Scopa di Quindici & Escoba, capture is possible if the sum of cards is 15
-        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA_DI_QUINDICI, SCP_VARIANT_ESCOBA]))
+        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA_DI_QUINDICI, SCP_VARIANT_ESCOBA, SCP_VARIANT_ESCOBA_NO_PRIME]))
         {
             foreach ($hand as $card_id => $card)
             {
@@ -1206,6 +1206,7 @@ class scopa extends Table {
             SCP_VARIANT_SCOPA_A_PERDERE => 3,
             SCP_VARIANT_SCOPA_FRAC => 3,
             SCP_VARIANT_ESCOBA => 3,
+            SCP_VARIANT_ESCOBA_NO_PRIME => 3,
             SCP_VARIANT_CIRULLA => 3,
         ][$this->getGameStateValue('game_variant')];
         $players = self::loadPlayersBasicInfos();
@@ -1414,7 +1415,7 @@ class scopa extends Table {
         }
 
         // Hide the Escoba row if disabled
-        if ($this->getGameStateValue('game_variant') != SCP_VARIANT_ESCOBA)
+        if (!in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_ESCOBA, SCP_VARIANT_ESCOBA_NO_PRIME]))
         {
             unset($scoring_rows['sevens_captured']);
         }
@@ -1435,7 +1436,14 @@ class scopa extends Table {
             $this->scoreSetteBello($cards, $score_table);
             $this->scoreCardsCaptured($cards, $score_table);
             $this->scoreCoinsCaptured($cards, $score_table);
-            $this->scorePrime($cards, $score_table);
+            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ESCOBA_NO_PRIME)
+            {
+                unset($scoring_rows['prime_score']);
+            }
+            else
+            {
+                $this->scorePrime($cards, $score_table);
+            }
         }
 
         // Score for Napola
@@ -1463,6 +1471,7 @@ class scopa extends Table {
                 break;
 
             case SCP_VARIANT_ESCOBA:
+            case SCP_VARIANT_ESCOBA_NO_PRIME:
                 $this->scoreEscoba($cards, $score_table);
                 break;
 
@@ -1476,9 +1485,13 @@ class scopa extends Table {
         {
             // Get the winners in each category (except scopa & sette bello, already counted)
             $categories = ['cards_captured', 'coins_captured', 'prime_score'];
-            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ESCOBA)
+            if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_ESCOBA, SCP_VARIANT_ESCOBA_NO_PRIME]))
             {
                 $categories[] = 'sevens_captured';
+            }
+            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ESCOBA_NO_PRIME)
+            {
+                $categories = array_diff($categories, ['prime_score']);
             }
             foreach ($categories as $category)
             {

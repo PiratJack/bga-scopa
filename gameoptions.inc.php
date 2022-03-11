@@ -101,6 +101,11 @@ $game_options = [
                 'tmdisplay' => totranslate('Variant: Escoba'),
                 'description' => totranslate('Capturing cards is possible only if the sum of cards equals 15. Extra point for capturing most sevens and all of the sevens.'),
             ],
+            SCP_VARIANT_ESCOBA_NO_PRIME => [
+                'name' => totranslate('Escoba without Prime'),
+                'tmdisplay' => totranslate('Variant: Escoba without Prime points'),
+                'description' => totranslate('Capturing cards is possible only if the sum of cards equals 15. Extra point for capturing most sevens and all of the sevens. Prime points are not counted'),
+            ],
             SCP_VARIANT_CIRULLA => [
                 'name' => totranslate('Cirulla'),
                 'tmdisplay' => totranslate('Variant: Cirulla'),
