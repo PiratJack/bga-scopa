@@ -1973,7 +1973,7 @@ class scopa extends Table {
             return;
         }
 
-        throw new BgaVisibleSystemException(self::_('Zombie mode not supported at this game state: ').$statename);
+        throw new BgaVisibleSystemException(str_replace('${statename}', $statename, self::_('Zombie mode not supported at this game state: ${statename}')));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////:

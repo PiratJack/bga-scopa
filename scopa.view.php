@@ -27,7 +27,7 @@ class view_scopa_scopa extends game_view {
         $game_options = $this->game->getTableOptions();
         $variant = $this->game->getGameStateValue('game_variant');
         $variant_data = $game_options[SCP_VARIANT]['values'][$variant];
-        $this->tpl['VARIANT_MESSAGE'] = str_replace('${variant_name}', $variant_data['name'], self::_('Your are playing a game of ${variant_name}. '));
+        $this->tpl['VARIANT_MESSAGE'] = str_replace('${variant_name}', $variant_data['name'], self::_('You are playing a game of ${variant_name}. '));
         if ($variant != SCP_VARIANT_SCOPA)
         {
             $this->tpl['VARIANT_MESSAGE'] .= str_replace('${variant_rules}', $variant_data['description'], self::_('Special rules: ${variant_rules}'));
