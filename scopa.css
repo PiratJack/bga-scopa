@@ -155,7 +155,14 @@
 
 .player_board_content .scp_scopa_points {
     margin-left: 8px;
-    background-position: 50% 0;
+    background-position: 33% 0;
+    color: black;
+    text-shadow: 0 0 10px white;
+}
+
+.player_board_content .scp_cards_captured {
+    margin-left: 8px;
+    background-position: 69% 0;
     color: black;
     text-shadow: 0 0 10px white;
 }
@@ -173,16 +180,16 @@
     display: inline-block;
 
     width: 100px;
-    height: 55px;
+    height: 40px;
     margin-left: 20px;
-    padding-left: 50px;
+    padding-left: 35px;
 
     background-image: url('img/sprites.png');
     background-size: 120%;
     background-position: -125px 15px;
     background-repeat: no-repeat;
 
-    line-height: 55px;
+    line-height: 45px;
     font-size: 90%;
     font-style: italic;
 }

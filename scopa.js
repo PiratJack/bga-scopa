@@ -48,18 +48,35 @@ define([
                     }
 
                     // Set up player board
-                    dojo.place(this.format_block('jstpl_player_board', {
-                        player_id1: playerId,
-                        /* Some kind of bug happens if you use multiple times the same variable in the template */
-                        player_id2: playerId,
-                        player_id3: playerId,
-                        card_count: gamedatas.players_hand[playerId],
-                        ally_name: ally_name,
-                        scopa_in_round: player.scopa_in_round,
-                    }), player_board_div);
+                    if (player.cards_captured) {
+                        dojo.place(this.format_block('jstpl_player_board', {
+                            player_id1: playerId,
+                            /* Some kind of bug happens if you use multiple times the same variable in the template */
+                            player_id2: playerId,
+                            player_id3: playerId,
+                            player_id4: playerId,
+                            card_count: gamedatas.players_hand[playerId],
+                            ally_name: ally_name,
+                            scopa_in_round: player.scopa_in_round,
+                            cards_captured_count: player.cards_captured,
+                        }), player_board_div);
+                    } else {
+                        dojo.place(this.format_block('jstpl_player_board', {
+                            player_id1: playerId,
+                            /* Some kind of bug happens if you use multiple times the same variable in the template */
+                            player_id2: playerId,
+                            player_id3: playerId,
+                            player_id4: playerId,
+                            card_count: gamedatas.players_hand[playerId],
+                            ally_name: ally_name,
+                            scopa_in_round: player.scopa_in_round,
+                            cards_captured_count: 0,
+                        }), player_board_div);
+                    }
 
                     this.addTooltip('cp_deck_' + playerId, _('Cards left in hand'), '')
                     this.addTooltip('scp_scopa_points_' + playerId, _('Scopa points marked during this round'), '')
+                    this.addTooltip('scp_cards_captured_' + playerId, _('Cards captured during this round'), '')
 
                     // Team game
                     if (typeof gamedatas.players[playerId].team_id != 'undefined') {
@@ -446,11 +463,19 @@ define([
 
             // Update card counts
             updateCardsCount: function(counts) {
-                for (i in counts)
-                    if (i == 'deck')
-                        $('scp_deckcard').innerHTML = counts[i];
-                    else
-                        $('cp_deck_' + i).innerHTML = counts[i];
+                for (type in counts)
+                    if (type == 'deck')
+                        $('scp_deckcard').innerHTML = counts[type];
+                    else if (type == 'capture') {
+                    for (playerId in counts[type])
+                        $('scp_cards_captured_' + playerId).innerHTML = counts[type][playerId];
+                } else if (type == 'hand') {
+                    for (playerId in counts[type])
+                        $('cp_deck_' + playerId).innerHTML = counts[type][playerId];
+                }
+                // Backwards compatibility: type = player ID
+                else
+                    $('cp_deck_' + type).innerHTML = counts[type];
             },
 
             // Update cards in hand

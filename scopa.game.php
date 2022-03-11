@@ -502,6 +502,11 @@ class scopa extends Table {
                 }));
             }
 
+            // Get # of cards captured
+            $sql = 'SELECT card_location_arg player_id, count(card_id) nb_cards FROM card WHERE card_location="capture" GROUP BY player_id';
+            $cards_captured = self::getCollectionFromDB($sql, true);
+            $cards_captured += array_fill_keys(array_keys($players), 0);
+
             foreach ($players as $player_id => $player)
             {
                 $players[$player_id]['score'] = $data[$player_id]['player_score'];
@@ -512,16 +517,24 @@ class scopa extends Table {
                     return $v != $player_id;
                 });
                 $players[$player_id]['ally'] = array_pop($ally);
+                $players[$player_id]['cards_captured'] = $cards_captured[$player_id] + $cards_captured[$players[$player_id]['ally']];
             }
         }
         else
         {
             $sql = 'SELECT player_id, player_score, scopa_in_round FROM player';
             $data = self::getCollectionFromDB($sql);
+
+            // Get # of cards captured
+            $sql = 'SELECT card_location_arg player_id, count(card_id) nb_cards FROM card WHERE card_location="capture" GROUP BY player_id';
+            $cards_captured = self::getCollectionFromDB($sql, true);
+            $cards_captured += array_fill_keys(array_keys($players), 0);
+
             foreach ($data as $player_id => $info)
             {
                 $players[$player_id]['score'] = $info['player_score'];
                 $players[$player_id]['scopa_in_round'] = $info['scopa_in_round'];
+                $players[$player_id]['cards_captured'] = $cards_captured[$player_id];
             }
         }
 
@@ -557,24 +570,37 @@ class scopa extends Table {
     // Sends counts of data in player's hands and deck
     private function notif_cardsCount() {
         // Cards in each player's hand
-        $sql = 'SELECT IF(card_location="deck","deck",card_location_arg) location, count(card_id)
-                FROM card where card_location in ("hand", "deck")
-                GROUP BY location ';
-        $data = self::getCollectionFromDb($sql, true);
+        $sql = 'SELECT card_location, IF(card_location="deck","deck",card_location_arg) player, count(card_id) nb_cards
+                FROM card where card_location in ("hand", "deck", "capture")
+                GROUP BY card_location, player';
+        $data = self::getDoubleKeyCollectionFromDB($sql, true);
+        // Flatten the array a bit
+        $data['deck'] = $data['deck']['deck'];
 
-        $sql = 'SELECT player_id id FROM player ';
-        $players = self::getCollectionFromDb($sql, true);
-        foreach ($players as $player_id => $temp)
+
+        $players = $this->loadPlayersBasicInfosWithTeam();
+        $player_ids = array_keys($players);
+        $data_zero = ['hand' => array_fill_keys($player_ids, 0), 'deck' => 0, 'capture' => array_fill_keys($player_ids, 0)];
+
+        // For team play, merge the player's "scores"
+
+        // Create any missing key (hand, capture or deck)
+        $data += $data_zero;
+        // Adds any missing player
+        foreach ($data as $key => $value)
         {
-            if (!array_key_exists($player_id, $data))
+            if (is_array($value))
             {
-                $data[$player_id] = 0;
+                $data[$key] += $data_zero[$key];
             }
         }
 
-        if (!array_key_exists('deck', $data))
+        if ($this->isTeamPlay())
         {
-            $data['deck'] = 0;
+            foreach ($data['capture'] as $player_id => $value)
+            {
+                $data['capture'][$player_id] = $players[$player_id]['cards_captured'];
+            }
         }
 
         self::notifyAllPlayers(
