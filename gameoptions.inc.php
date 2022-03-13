@@ -281,6 +281,7 @@ $game_preferences = [
             SCP_PREF_CARD_DECK_BERGAMASCHE => [ 'name' => totranslate('Bergamasche') ],
             SCP_PREF_CARD_DECK_BRESCIANE => [ 'name' => totranslate('Bresciane') ],
             SCP_PREF_CARD_DECK_PIACENTINE => [ 'name' => totranslate('Piacentine') ],
+            SCP_PREF_CARD_DECK_SPANISH => [ 'name' => totranslate('Spanish') ],
         ],
         'default' => SCP_PREF_CARD_DECK_NAPOLITAN
     ],

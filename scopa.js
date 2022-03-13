@@ -26,8 +26,9 @@ define([
                 this.dontPreloadImage('cards_bergamasche.jpg');
                 this.dontPreloadImage('cards_bresciane.jpg');
                 this.dontPreloadImage('cards_piacentine.jpg');
+                this.dontPreloadImage('cards_spanish.jpg');
 
-                this.deckCardClasses = ['scp_napolitan_deck', 'scp_standard_deck', 'scp_bergamasche_deck', 'scp_bresciane_deck', 'scp_piacentine_deck'];
+                this.deckCardClasses = ['scp_napolitan_deck', 'scp_standard_deck', 'scp_bergamasche_deck', 'scp_bresciane_deck', 'scp_piacentine_deck', 'scp_spanish_deck'];
 
                 dojo.connect(window, 'resize', () => this.resizeBoard());
             },

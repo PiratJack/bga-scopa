@@ -106,6 +106,10 @@
     background-image: url('img/cards_piacentine.jpg') !important;
 }
 
+.scp_spanish_deck {
+    background-image: url('img/cards_spanish.jpg') !important;
+}
+
 /* Card in capture group */
 .scp_capturegroup .scp_card {
     margin-right: 10px;
