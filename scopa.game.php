@@ -484,7 +484,7 @@ class scopa extends Table {
     }
 
     // Does the same as loadPlayerBasicInfos, with the team_id added
-    public function loadPlayersBasicInfosWithTeam() {
+    public function loadPlayersBasicInfosWithTeam($seats_needed = true) {
         $players = self::loadPlayersBasicInfos();
         if ($this->isTeamPlay())
         {
@@ -538,23 +538,26 @@ class scopa extends Table {
             }
         }
 
-        // Define player's seat position
-        $player_order = $this->getNextPlayerTable();
-        $current_player = $this->getCurrentPlayerId();
-        if (!array_key_exists($current_player, $player_order))
+        if ($seats_needed)
         {
-            $current_player = $player_order[0];
-            $players[$current_player]['seat_position'] = 'bottom_left';
-        }
+            // Define player's seat position
+            $player_order = $this->getNextPlayerTable();
+            $current_player = $this->getCurrentPlayerId();
+            if (!array_key_exists($current_player, $player_order))
+            {
+                $current_player = $player_order[0];
+                $players[$current_player]['seat_position'] = 'bottom_left';
+            }
 
-        $player_pointer = $player_order[$current_player];
-        $order = 1;
-        $seat_position = $this->seat_positions[count($players)];
-        while ($current_player != $player_pointer && $order < count($players))
-        {
-            $players[$player_pointer]['seat_position'] = $seat_position[$order];
-            $order++;
-            $player_pointer = $player_order[$player_pointer];
+            $player_pointer = $player_order[$current_player];
+            $order = 1;
+            $seat_position = $this->seat_positions[count($players)];
+            while ($current_player != $player_pointer && $order < count($players))
+            {
+                $players[$player_pointer]['seat_position'] = $seat_position[$order];
+                $order++;
+                $player_pointer = $player_order[$player_pointer];
+            }
         }
 
         return $players;
@@ -575,10 +578,12 @@ class scopa extends Table {
                 GROUP BY card_location, player';
         $data = self::getDoubleKeyCollectionFromDB($sql, true);
         // Flatten the array a bit
-        $data['deck'] = $data['deck']['deck'];
+        if (array_key_exists('deck', $data))
+        {
+            $data['deck'] = $data['deck']['deck'];
+        }
 
-
-        $players = $this->loadPlayersBasicInfosWithTeam();
+        $players = $this->loadPlayersBasicInfosWithTeam(false);
         $player_ids = array_keys($players);
         $data_zero = ['hand' => array_fill_keys($player_ids, 0), 'deck' => 0, 'capture' => array_fill_keys($player_ids, 0)];
 
