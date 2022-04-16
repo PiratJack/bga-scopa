@@ -309,29 +309,33 @@ class scopa extends Table {
 
     // Formats cards for display purpose
     public function cardsToDisplay($cards) {
+        $logs = [];
+        $args = ['log' => '', 'args' => ['i18n' => []]];
+
         $cards_by_type = [];
+        $card_in_color = 0;
         foreach ($cards as $card)
         {
-            if (!array_key_exists($card['type'], $cards_by_type))
+            # Add suit/color (card type) to the list of arguments
+            $arg_name = 'color_'.$card['type'];
+            if (!array_key_exists($arg_name, $args['args']))
             {
-                $cards_by_type[$card['type']] = [];
+                $card_in_color = 0;
+
+                $logs[$card['type']] = '${'.$arg_name.'} : ';
+                $args['args'][$arg_name] = $this->colors[$card['type']]['name'];
+                $args['args']['i18n'][] = $arg_name;
             }
-            $cards_by_type[$card['type']][] = $card['type_arg'];
+            # Add the card itself
+            $card_in_color += 1;
+            $arg_name = 'card_'.$card['type'].'_'.$card['type_arg'];
+            $logs[$card['type']] .= ' ${'.$arg_name.'} ';
+            $args['args'][$arg_name] = $this->values_label[$card['type_arg']];
+            $args['args']['i18n'][] = $arg_name;
         }
-        ksort($cards_by_type);
+        $args['log'] = implode('<br />', $logs);
 
-        $cards_display = [];
-        foreach ($cards_by_type as $type => $cards_of_type)
-        {
-            $cards_display[$type] = $this->colors[$type]['name'].' :';
-
-            foreach ($cards_of_type as $card_value)
-            {
-                $cards_display[$type] .= '&nbsp;' . $this->values_label[$card_value];
-            }
-        }
-
-        return implode('<br />', $cards_display);
+        return $args;
     }
 
     // Gets and returns a random element in the list (used for Zombie)
