@@ -245,6 +245,10 @@ $game_options = [
             SCP_MULTIPLE_CAPTURES_ALLOW_LOWEST => [
                 'name' => totranslate('Allow only the lowest number of cards to be captured'),
             ],
+            SCP_MULTIPLE_CAPTURES_ALLOW_ALL_EXCEPT_SINGLE => [
+                'name' => totranslate('Allow any combination to be captured except if a single card matches'),
+                'description' => totranslate('If a single card matches, capture it. Otherwise, any combination can be captured.'),
+            ],
             SCP_MULTIPLE_CAPTURES_ALLOW_ALL => [
                 'name' => totranslate('Allow any combination to be captured'),
             ],

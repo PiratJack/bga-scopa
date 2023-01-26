@@ -229,6 +229,9 @@ class scopa extends Table {
             );
 
             $allow_all_captures = $this->getGameStateValue('multiple_captures') == SCP_MULTIPLE_CAPTURES_ALLOW_ALL;
+            $allow_all_captures_except_single = $this->getGameStateValue('multiple_captures') == SCP_MULTIPLE_CAPTURES_ALLOW_ALL_EXCEPT_SINGLE;
+
+
             // array_values forces a re-indexing, which means Javascript will see it as an array and not an object
 
             // In Asso piglia tutto (simplified), Aces capture everything
@@ -237,8 +240,8 @@ class scopa extends Table {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
                         $combinations,
-                        function ($value) use ($min_cards, $hand, $table, $card_id, $allow_all_captures) {
-                            return ($hand[$card_id]['type_arg'] == 1) ? $value['size'] == count($table) : ($value['size'] == $min_cards || $allow_all_captures);
+                        function ($value) use ($min_cards, $hand, $table, $card_id, $allow_all_captures, $allow_all_captures_except_single) {
+                            return ($hand[$card_id]['type_arg'] == 1) ? $value['size'] == count($table) : ($value['size'] == $min_cards || $allow_all_captures || ($min_cards != 1 && $allow_all_captures_except_single));
                         }
                     )
                 );
@@ -251,11 +254,32 @@ class scopa extends Table {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
                         $combinations,
-                        function ($value) use ($min_cards, $hand, $table, $card_id, $ace_captures_all, $allow_all_captures) {
-                            return ($hand[$card_id]['type_arg'] == 1 && $ace_captures_all) ? $value['size'] == count($table) : ($value['size'] == $min_cards || $allow_all_captures);
+                        function ($value) use ($min_cards, $hand, $table, $card_id, $ace_captures_all, $allow_all_captures, $allow_all_captures_except_single) {
+                            return ($hand[$card_id]['type_arg'] == 1 && $ace_captures_all) ? $value['size'] == count($table) : ($value['size'] == $min_cards || $allow_all_captures || ($min_cards != 1 && $allow_all_captures_except_single));
                         }
                     )
                 );
+            }
+            // If all captures are allowed except if a single card matches
+            elseif ($allow_all_captures_except_single)
+            {
+                // There is a single card matching
+                if ($min_cards == 1)
+                {
+                    $possible_actions[$card_id] = array_values(
+                        array_filter(
+                            $combinations,
+                            function ($value) use ($min_cards) {
+                                return $value['size'] == $min_cards;
+                            }
+                        )
+                    );
+                }
+                // There is no single card matching ==> can capture anything
+                else
+                {
+                    $possible_actions[$card_id] = array_values($combinations);
+                }
             }
             // If all captures are allowed, just apply array_values
             elseif ($allow_all_captures)
