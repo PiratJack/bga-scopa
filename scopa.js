@@ -89,6 +89,10 @@ define([
                 }
 
                 $('scp_deckcard').innerHTML = gamedatas.players_hand.deck;
+                if (gamedatas.players_hand.deck == 0)
+                    dojo.query('#scp_deckcard').addClass('scp_deck_empty')
+                else
+                    dojo.query('#scp_deckcard').removeClass('scp_deck_empty')
 
 
                 /************* Setup Stock for Player & Table hands ****************/
@@ -465,9 +469,14 @@ define([
             // Update card counts
             updateCardsCount: function(counts) {
                 for (type in counts)
-                    if (type == 'deck')
+                    if (type == 'deck') {
                         $('scp_deckcard').innerHTML = counts[type];
-                    else if (type == 'capture') {
+                        if (counts[type] == 0)
+                            dojo.query('#scp_deckcard').addClass('scp_deck_empty')
+                        else
+                            dojo.query('#scp_deckcard').removeClass('scp_deck_empty')
+                    }
+                else if (type == 'capture') {
                     for (playerId in counts[type])
                         $('scp_cards_captured_' + playerId).innerHTML = counts[type][playerId];
                 } else if (type == 'hand') {

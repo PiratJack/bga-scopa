@@ -8,7 +8,7 @@
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  */
-  require_once APP_BASE_PATH.'view/common/game.view.php';
+require_once APP_BASE_PATH.'view/common/game.view.php';
 
 class view_scopa_scopa extends game_view {
     public function getGameName() {

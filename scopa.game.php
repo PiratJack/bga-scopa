@@ -1488,7 +1488,8 @@ class scopa extends Table {
         }
 
         // Score for variants
-        switch ($this->getGameStateValue('game_variant')) {
+        switch ($this->getGameStateValue('game_variant'))
+        {
             case SCP_VARIANT_IL_PONINO:
                 $this->scoreIlPonino($cards, $score_table);
                 break;

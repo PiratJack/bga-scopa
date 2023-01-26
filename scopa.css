@@ -126,6 +126,11 @@
     text-shadow: 0 0 6px #000;
 }
 
+/* Main deck of cards - hide if empty */
+.scp_deck_empty {
+    display: none;
+}
+
 .scp_card_label {
     min-height: 30px;
     background: #c0c0c0e0;
