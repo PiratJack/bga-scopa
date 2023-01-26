@@ -1397,6 +1397,8 @@ class scopa extends Table {
             );
         }
 
+        // Notify about card counts
+        $this->notif_cardsCount();
 
         $cards = $this->cards->getCardsInLocation('capture');
         $players = $this->loadPlayersBasicInfosWithTeam();
