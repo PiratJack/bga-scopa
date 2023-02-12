@@ -837,5 +837,35 @@ define([
                     $('scp_scopa_points_' + playerId).innerHTML = scoreData.scopa_in_round;
                 }
             },
+
+            // Display vine_color and tile with the actual color
+            format_string_recursive: function(log, args) {
+                try {
+                    if (log && args && !args.processed) {
+                        args.processed = true;
+
+                        // Scoring table: display details
+                        // This is a kind of ugly way to avoid retrocompatibility issues
+                        // If server sends '${details_1}' but the client is on previous version
+                        // Then it will display [object Object]
+                        if ('prime_score_details' in args) {
+                            log += args.prime_score_details;
+                            delete args.prime_score_details;
+
+                            if ('details_1' in args)
+                                args.details_1 = this.format_details_ing_recursive(args.details_1.str, args.details_1.args);
+                            if ('details_2' in args)
+                                args.details_2 = this.format_details_ing_recursive(args.details_2.str, args.details_2.args);
+                            if ('details_3' in args)
+                                args.details_3 = this.format_details_ing_recursive(args.details_3.str, args.details_3.args);
+                            if ('details_4' in args)
+                                args.details_4 = this.format_details_ing_recursive(args.details_4.str, args.details_4.args);
+                        }
+                    }
+                } catch (e) {
+                    console.error(log, args, "Exception thrown", e.stack);
+                }
+                return this.inherited(arguments);
+            },
         });
     });

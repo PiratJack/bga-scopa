@@ -192,7 +192,7 @@ class scopa extends Table {
         }
 
         // Keep only the combination that has the smallest number of cards
-        // In Scopa Frac & Cirulla OR with the "multiple captures" option, we can capture as many cards as wanted (not only the minimum number)
+        // In Scopa Frac & Cirulla, we can capture as many cards as wanted (not only the minimum number)
         if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA_FRAC, SCP_VARIANT_CIRULLA]))
         {
             foreach ($possible_actions as $card_id => $combinations)
@@ -1738,14 +1738,14 @@ class scopa extends Table {
         {
             $scorers = $this->loadPlayersBasicInfos();
         }
-        $scorers_prime = array_fill_keys(array_keys($scorers), ['1' => '', '2' => '', '3' => '', '4' => '']);
+        $scorers_prime = array_fill_keys(array_keys($scorers), ['str' => '${points}', 'args' => ['prime_score_details' => '<br />','points' => 0]]);
         $point_per_card = $this->prime_points;
         foreach ($scorers_prime as $scorer_id => $colors)
         {
             $scorer_cards = array_filter($cards, function ($v) use ($scorer_id) {
                 return $v['location_arg'] == $scorer_id;
             });
-            foreach ($colors as $color_id => $temp)
+            foreach (['1', '2', '3', '4'] as $color_id)
             {
                 $cards_of_color = array_filter(
                     $scorer_cards,
@@ -1756,20 +1756,36 @@ class scopa extends Table {
 
                 $prime_points = array_map(
                     function ($card) use ($point_per_card) {
-                        return $point_per_card[$card['type_arg']];
+                        return [
+                            'card' => $card,
+                            'points' => $point_per_card[$card['type_arg']]
+                        ];
                     },
                     $cards_of_color
                 );
                 if (!empty($prime_points))
                 {
-                    $scorers_prime[$scorer_id][$color_id] = max($prime_points);
-                }
-                else
-                {
-                    $scorers_prime[$scorer_id][$color_id] = 0;
+                    $prime_point_color = max(array_column($prime_points, 'points'));
+                    $card_giving_point = array_filter($prime_points, function ($card) use ($prime_point_color) {
+                        return $card['points'] == $prime_point_color;
+                    });
+                    $card = array_pop($card_giving_point)['card'];
+
+                    // Prepare display of card
+                    $args = [
+                        'str' => clienttranslate('${value} of ${suit} : ${points} points<br />'),
+                        'args' => [
+                            'value' => $this->values_label[$card['type_arg']],
+                            'suit' => $this->colors[$card['type']]['name'],
+                            'points' => $prime_point_color,
+                        ]
+                    ];
+
+                    $scorers_prime[$scorer_id]['args']['prime_score_details'] .= '${str'.$color_id.'}';
+                    $scorers_prime[$scorer_id]['args']['details_'.$color_id] = $args;
+                    $scorers_prime[$scorer_id]['args']['points'] += $prime_point_color;
                 }
             }
-            $scorers_prime[$scorer_id] = array_sum($scorers_prime[$scorer_id]);
         }
         $score_table['prime_score'] = $scorers_prime;
     }

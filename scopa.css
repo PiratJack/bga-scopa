@@ -207,6 +207,10 @@
     display: none;
 }
 
+/* Center player names on scoring table */
+.tableWindow th {
+    text-align: center;
+}
 
 /****************** Position of main elements ******************/
 
