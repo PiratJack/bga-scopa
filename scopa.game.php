@@ -1781,7 +1781,7 @@ class scopa extends Table {
                         ]
                     ];
 
-                    $scorers_prime[$scorer_id]['args']['prime_score_details'] .= '${str'.$color_id.'}';
+                    $scorers_prime[$scorer_id]['args']['prime_score_details'] .= '${details_'.$color_id.'}';
                     $scorers_prime[$scorer_id]['args']['details_'.$color_id] = $args;
                     $scorers_prime[$scorer_id]['args']['points'] += $prime_point_color;
                 }

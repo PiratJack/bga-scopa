@@ -853,13 +853,13 @@ define([
                             delete args.prime_score_details;
 
                             if ('details_1' in args)
-                                args.details_1 = this.format_details_ing_recursive(args.details_1.str, args.details_1.args);
+                                args.details_1 = this.format_string_recursive(args.details_1.str, args.details_1.args);
                             if ('details_2' in args)
-                                args.details_2 = this.format_details_ing_recursive(args.details_2.str, args.details_2.args);
+                                args.details_2 = this.format_string_recursive(args.details_2.str, args.details_2.args);
                             if ('details_3' in args)
-                                args.details_3 = this.format_details_ing_recursive(args.details_3.str, args.details_3.args);
+                                args.details_3 = this.format_string_recursive(args.details_3.str, args.details_3.args);
                             if ('details_4' in args)
-                                args.details_4 = this.format_details_ing_recursive(args.details_4.str, args.details_4.args);
+                                args.details_4 = this.format_string_recursive(args.details_4.str, args.details_4.args);
                         }
                     }
                 } catch (e) {
