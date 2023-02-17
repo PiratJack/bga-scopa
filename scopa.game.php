@@ -1557,13 +1557,30 @@ class scopa extends Table {
             }
             foreach ($categories as $category)
             {
-                $high_score = max($score_table[$category]);
-                $winners = array_filter(
-                    $score_table[$category],
-                    function ($val) use ($high_score) {
-                        return $val == $high_score;
-                    }
-                );
+                // Array format is different than the others
+                if ($category == 'prime_score')
+                {
+                    $scores = array_map(function ($el) {
+                        return $el['args']['points'];
+                    }, $score_table[$category]);
+                    $high_score = max($scores);
+                    $winners = array_filter(
+                        $scores,
+                        function ($val) use ($high_score) {
+                            return $val == $high_score;
+                        }
+                    );
+                }
+                else
+                {
+                    $high_score = max($score_table[$category]);
+                    $winners = array_filter(
+                        $score_table[$category],
+                        function ($val) use ($high_score) {
+                            return $val == $high_score;
+                        }
+                    );
+                }
                 if (1 == count($winners))
                 {
                     // We have a unique winner!
