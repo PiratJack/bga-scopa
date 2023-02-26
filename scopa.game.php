@@ -24,6 +24,7 @@ class scopa extends Table {
                 'team_play' => SCP_TEAM_PLAY,
                 'who_captures_remaining' => SCP_WHO_CAPTURES_REMAINING,
                 'multiple_captures' => SCP_MULTIPLE_CAPTURES,
+                'team_composition' => SCP_TEAM_COMPOSITION,
 
                 'cirulla_joker_value' => SCP_GLOBAL_CIRULLA_JOKER_VALUE,
             ]
@@ -2154,49 +2155,91 @@ class scopa extends Table {
         $default_colors = $gameinfos['player_colors'];
 
         // Create players
-        $sql = 'INSERT INTO player (player_id, player_score, player_color, player_canal, player_name, player_avatar) VALUES ';
+        $sql = 'INSERT INTO player (player_id, player_no, player_score, player_color, player_canal, player_name, player_avatar, team_id) VALUES ';
         $values = [];
+
+        // Prepare team split
+        $team_composition = $this->getGameStateValue('team_composition');
+        $team_split = [
+            SCP_TEAM_COMPOSITION_RANDOM => 0,
+            SCP_TEAM_COMPOSITION_1_2 => [ 1 => 0, 2 => 0, 3 => 1, 4 => 1 ],
+            SCP_TEAM_COMPOSITION_1_3 => [ 1 => 0, 3 => 0, 2 => 1, 4 => 1 ],
+            SCP_TEAM_COMPOSITION_1_4 => [ 1 => 0, 4 => 0, 2 => 1, 3 => 1 ],
+            SCP_TEAM_COMPOSITION_12_34_56 => [ 1 => 0, 2 => 0, 3 => 1, 4 => 1, 5 => 2, 6 => 2],
+            SCP_TEAM_COMPOSITION_12_35_46 => [ 1 => 0, 2 => 0, 3 => 1, 5 => 1, 4 => 2, 6 => 2],
+            SCP_TEAM_COMPOSITION_12_36_45 => [ 1 => 0, 2 => 0, 3 => 1, 6 => 1, 4 => 2, 5 => 2],
+            SCP_TEAM_COMPOSITION_13_24_56 => [ 1 => 0, 3 => 0, 2 => 1, 4 => 1, 5 => 2, 6 => 2],
+            SCP_TEAM_COMPOSITION_13_25_46 => [ 1 => 0, 3 => 0, 2 => 1, 5 => 1, 4 => 2, 6 => 2],
+            SCP_TEAM_COMPOSITION_13_26_45 => [ 1 => 0, 3 => 0, 2 => 1, 6 => 1, 4 => 2, 5 => 2],
+            SCP_TEAM_COMPOSITION_14_23_56 => [ 1 => 0, 4 => 0, 2 => 1, 3 => 1, 5 => 2, 6 => 2],
+            SCP_TEAM_COMPOSITION_14_25_36 => [ 1 => 0, 4 => 0, 2 => 1, 5 => 1, 3 => 2, 6 => 2],
+            SCP_TEAM_COMPOSITION_14_26_35 => [ 1 => 0, 4 => 0, 2 => 1, 6 => 1, 3 => 2, 5 => 2],
+            SCP_TEAM_COMPOSITION_15_23_46 => [ 1 => 0, 5 => 0, 2 => 1, 3 => 1, 4 => 2, 6 => 2],
+            SCP_TEAM_COMPOSITION_15_24_36 => [ 1 => 0, 5 => 0, 2 => 1, 4 => 1, 3 => 2, 6 => 2],
+            SCP_TEAM_COMPOSITION_15_26_34 => [ 1 => 0, 5 => 0, 2 => 1, 6 => 1, 3 => 2, 4 => 2],
+        ][$team_composition];
+
+        // I need to define a random dealer, since BGA won't do it before the player table is defined
+        $random_dealer = bga_rand(1, count($players));
+
+        $team_id = 0;
+        $teams = [0 => [], 1 => []];
+        if (count($players) == 6)
+        {
+            $teams[2] = [];
+        }
+        // What is the order as displayed in the lobby?
+        // Undocumented column player_table_order ==> default is just based on the foreach order
+        $players_order = [];
         foreach ($players as $player_id => $player)
         {
+            if ($team_composition == SCP_TEAM_COMPOSITION_RANDOM)
+            {
+                $players_order[$player_id] = count($players_order) + 1;
+            }
+            elseif (array_key_exists('player_table_order', $player))
+            {
+                $players_order[$player_id] = $player['player_table_order'];
+            }
+            else
+            {
+                $players_order[$player_id] = count($players_order) + 1;
+            }
+        }
+        asort($players_order);
+
+        foreach ($players_order as $player_id => $player_order)
+        {
+            $player = $players[$player_id];
             $color = array_shift($default_colors);
-            $values[] = '("'.$player_id.'",0,"'.$color.'","'.$player['player_canal'].'","'.addslashes($player['player_name']).'","'.addslashes($player['player_avatar']).'")';
+
+            switch ($team_composition)
+            {
+                case SCP_TEAM_COMPOSITION_RANDOM:
+                    $teams[$team_id][] = $player_id;
+                    $team_id ++;
+                    $team_id %= (count($players) / 2);
+                    // Keep player order from random BGA since we alternate teams
+                    $player['player_no'] = $player_order - $random_dealer+1;
+                    break;
+                default:
+                    $team_id = $team_split[$player_order];
+                    $teams[$team_id][] = $player_id;
+                    // Reorder players to ensure teams alternate
+                    $new_order = $team_id+(count($teams[$team_id])-1)*count($teams);
+                    $player['player_no'] = $new_order - $random_dealer+1;
+            }
+            if ($player['player_no'] < 0)
+            {
+                $player['player_no'] += count($players);
+            }
+
+            //$team_id+1 so that the first team is team 1 (easier for player + consistent with JS)
+            $values[] = '("'.$player_id.'",'.$player['player_no'].',0,"'.$color.'","'.$player['player_canal'].'","'.addslashes($player['player_name']).'","'.addslashes($player['player_avatar']).'", '.($team_id+1).')';
         }
         $sql .= implode($values, ',');
         self::DbQuery($sql);
         self::reattributeColorsBasedOnPreferences($players, $gameinfos['player_colors']);
-
-        // Assign players to teams
-        if ($this->isTeamPlay())
-        {
-            $team_id = 0;
-            $teams = [0 => [], 1 => []];
-            if (count($player) == 6)
-            {
-                $teams[2] = [];
-            }
-
-            $player_order = $this->getNextPlayerTable();
-            $player_pointer = $player_order[0];
-            $i = 0;
-            while ($i != count($players))
-            {
-                $teams[$team_id][] = $player_pointer;
-                $team_id ++;
-                $team_id %= (count($players) / 2);
-
-                $player_pointer = $player_order[$player_pointer];
-                $i++;
-            }
-
-            foreach ($teams as $team_id => $team_players)
-            {
-                // The "+1" is needed so that team_id != 0
-                // Having it equal to 0 is confusing for players + it makes some JS piece fail
-                $sql = 'UPDATE player SET team_id = '.$team_id.'+1 WHERE player_id IN ('.implode(', ', $team_players).')';
-                self::DbQuery($sql);
-            }
-        }
-
 
         self::reloadPlayersBasicInfos();
 
@@ -2210,10 +2253,10 @@ class scopa extends Table {
 
         // Prepare card deck
         $cards = [];
-        foreach ($this->colors as $color_id => $color)
-        { // coin, cup, sword, club
-            foreach ($this->values_label as $value_id => $value)
-            { //  1, 2, 3, 4, ... K
+        foreach ($this->colors as $color_id => $color) // coin, cup, sword, club
+        {
+            foreach ($this->values_label as $value_id => $value) //  1, 2, 3, 4, ... K
+            {
                 $cards[] = ['type' => $color_id, 'type_arg' => $value_id, 'nbr' => 1];
             }
         }

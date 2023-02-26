@@ -227,6 +227,82 @@ $game_options = [
         'notdisplayedmessage' => totranslate('Playing in teams is possible only with 4 or 6 players.'),
         'default' => SCP_TEAM_PLAY_NO,
     ],
+    SCP_TEAM_COMPOSITION => [
+        'name' => totranslate('Team determination'),
+        'values' => [
+            SCP_TEAM_COMPOSITION_RANDOM => [
+                'name' => totranslate('Random')
+            ],
+            SCP_TEAM_COMPOSITION_1_2 => [
+                'name' => totranslate('By lobby display order: 1st/2nd versus 3rd/4th (4 players only)')
+            ],
+            SCP_TEAM_COMPOSITION_1_3 => [
+                'name' => totranslate('By lobby display order: 1st/3rd versus 2nd/4th (4 players only)')
+            ],
+            SCP_TEAM_COMPOSITION_1_4 => [
+                'name' => totranslate('By lobby display order: 1st/4th versus 2nd/3rd (4 players only)')
+            ],
+            SCP_TEAM_COMPOSITION_12_34_56 => [ 'name' => totranslate('By lobby display order: 1st/2nd vs 3rd/4th vs 5th/6th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_12_35_46 => [ 'name' => totranslate('By lobby display order: 1st/2nd vs 3rd/5th vs 4th/6th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_12_36_45 => [ 'name' => totranslate('By lobby display order: 1st/2nd vs 3rd/6th vs 4th/5th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_13_24_56 => [ 'name' => totranslate('By lobby display order: 1st/3rd vs 2nd/4th vs 5th/6th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_13_25_46 => [ 'name' => totranslate('By lobby display order: 1st/3rd vs 2nd/5th vs 4th/6th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_13_26_45 => [ 'name' => totranslate('By lobby display order: 1st/3rd vs 2nd/6th vs 4th/5th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_14_23_56 => [ 'name' => totranslate('By lobby display order: 1st/4th vs 2nd/3rd vs 5th/6th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_14_25_36 => [ 'name' => totranslate('By lobby display order: 1st/4th vs 2nd/5th vs 3rd/6th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_14_26_35 => [ 'name' => totranslate('By lobby display order: 1st/4th vs 2nd/6th vs 3rd/5th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_15_23_46 => [ 'name' => totranslate('By lobby display order: 1st/5th vs 2nd/3rd vs 4th/6th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_15_24_36 => [ 'name' => totranslate('By lobby display order: 1st/5th vs 2nd/4th vs 3rd/6th (6 players only)') ],
+            SCP_TEAM_COMPOSITION_15_26_34 => [ 'name' => totranslate('By lobby display order: 1st/5th vs 2nd/6th vs 3rd/4th (6 players only)') ],
+        ],
+        'default' => SCP_TEAM_COMPOSITION_RANDOM,
+        'displaycondition' => [
+            [
+                'type' => 'otheroption',
+                'id' => SCP_TEAM_PLAY,
+                'value' => [SCP_TEAM_PLAY_YES],
+            ],
+        ],
+        'notdisplayedmessage' => totranslate('Team composition is only available when playing in teams'),
+        'startcondition' => [
+            SCP_TEAM_COMPOSITION_1_2 => [
+                [
+                    'type' => 'minplayers', 'value' => 4, 'message' => 'The selected team setting is available for 4 players only.', 'gamestartonly' => true
+                ],
+                [
+                    'type' => 'maxplayers', 'value' => 4, 'message' => 'The selected team setting is available for 4 players only.', 'gamestartonly' => true
+                ],
+            ],
+            SCP_TEAM_COMPOSITION_1_3 => [
+                [
+                    'type' => 'minplayers', 'value' => 4, 'message' => 'The selected team setting is available for 4 players only.', 'gamestartonly' => true
+                ],
+                [
+                    'type' => 'maxplayers', 'value' => 4, 'message' => 'The selected team setting is available for 4 players only.', 'gamestartonly' => true
+                ],
+            ],
+            SCP_TEAM_COMPOSITION_1_4 => [
+                [
+                    'type' => 'minplayers', 'value' => 4, 'message' => 'The selected team setting is available for 4 players only.', 'gamestartonly' => true
+                ],
+                [
+                    'type' => 'maxplayers', 'value' => 4, 'message' => 'The selected team setting is available for 4 players only.', 'gamestartonly' => true
+                ],
+            ],
+            SCP_TEAM_COMPOSITION_12_34_56 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_12_35_46 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_12_36_45 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_13_24_56 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_13_25_46 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_13_26_45 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_14_23_56 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_14_25_36 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_14_26_35 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_15_23_46 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_15_24_36 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+            SCP_TEAM_COMPOSITION_15_26_34 => [ ['type' => 'minplayers', 'value' => 6, 'message' => 'The selected team setting is available for 6 players only.', 'gamestartonly' => true] ],
+        ],
+    ],
     SCP_WHO_CAPTURES_REMAINING => [
         'name' => totranslate('Which player should capture the remaining cards?'),
         'values' => [
