@@ -219,6 +219,17 @@ define([
                 }
             },
 
+            // Converts the card's color+value to an order for display, depending on player preference
+            getCardWeight: function(color, value) {
+                // Sort by suit, then number
+                if (this.prefs[106].value == 1)
+                    return (parseInt(color) - 1) * 10 + (parseInt(value) - 1);
+                // Sort by number, then suit
+                else
+                    return (parseInt(value) - 1) * 10 + (parseInt(color) - 1);
+            },
+
+
             ///////////////////////////////////////////////////
             //// Card display & manipulation
 
@@ -728,6 +739,11 @@ define([
                     case 105:
                         this.animationSpeed = prefValue;
                         break;
+
+                        // Card display order
+                    case 106:
+                        this.setCardDisplayOrder();
+                        break;
                 }
 
                 // Preferences that need to be sent to server (only if needed in PHP code)
@@ -768,6 +784,21 @@ define([
                 return dojo.hasClass('scp_board', 'scp_players_visible');
             },
 
+
+            // Changes the order in which cards are displayed
+            setCardDisplayOrder: function() {
+                weights = {}
+                for (var color = 1; color <= 4; color++) {
+                    for (var value = 1; value <= 10; value++) {
+                        var cardFaceId = this.getCardFacePosition(color, value);
+                        weights[cardFaceId] = this.getCardWeight(color, value);
+                    }
+                }
+
+                var stockHands = [this.playerCards, this.tableCards];
+                for (i in stockHands)
+                    stockHands[i].changeItemsWeight(weights);
+            },
 
             ///////////////////////////////////////////////////
             //// Reaction to cometD notifications

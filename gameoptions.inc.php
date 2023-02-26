@@ -326,4 +326,13 @@ $game_preferences = [
         ],
         'default' => SCP_PREF_ANIMATION_SPEED_1
     ],
+    SCP_PREF_DISPLAY_ORDER => [
+        'name' => totranslate('Order of cards'),
+        'needReload' => false, // Handled through JS directly
+        'values' => [
+            SCP_PREF_DISPLAY_ORDER_BY_SUIT => [ 'name' => totranslate('By suit') ],
+            SCP_PREF_DISPLAY_ORDER_BY_NUMBER => [ 'name' => totranslate('By number') ],
+        ],
+        'default' => SCP_PREF_DISPLAY_ORDER_BY_SUIT
+    ],
 ];

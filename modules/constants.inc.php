@@ -87,6 +87,10 @@ if (!defined('SCP_VARIANT_SCOPA'))
     define('SCP_PREF_ANIMATION_SPEED_2', 2);
     define('SCP_PREF_ANIMATION_SPEED_25', 25);
 
+    define('SCP_PREF_DISPLAY_ORDER', 106);
+    define('SCP_PREF_DISPLAY_ORDER_BY_SUIT', 1);
+    define('SCP_PREF_DISPLAY_ORDER_BY_NUMBER', 2);
+
 
     define('SCP_GLOBAL_CIRULLA_JOKER_VALUE', 10);
 }
