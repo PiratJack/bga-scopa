@@ -186,6 +186,7 @@ $game_options = [
     ],
     SCP_VARIANT_NAPOLA_ENABLED => [
         'name' => totranslate('Napola variant'),
+        'level' => 'additional',
         'values' => [
             SCP_VARIANT_NAPOLA_ENABLED_YES => [
                 'name' => totranslate('Enabled'),
@@ -229,6 +230,7 @@ $game_options = [
     ],
     SCP_TEAM_COMPOSITION => [
         'name' => totranslate('Team determination'),
+        'level' => 'additional',
         'values' => [
             SCP_TEAM_COMPOSITION_RANDOM => [
                 'name' => totranslate('Random')
