@@ -307,6 +307,7 @@ $game_options = [
     ],
     SCP_WHO_CAPTURES_REMAINING => [
         'name' => totranslate('Which player should capture the remaining cards?'),
+        'level' => 'additional',
         'values' => [
             SCP_WHO_CAPTURES_REMAINING_CAPTURER => [
                 'name' => totranslate('The last player to capture a card'),

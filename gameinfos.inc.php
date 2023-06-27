@@ -80,6 +80,8 @@ $gameinfos = [
     // Games categories
     'tags' => [2, 23, 30, 200],
 
+    'disable_player_order_swap_on_rematch' => true,
+
     //////// BGA SANDBOX ONLY PARAMETERS (DO NOT MODIFY)
 
     // simple : A plays, B plays, C plays, A plays, B plays, ...
