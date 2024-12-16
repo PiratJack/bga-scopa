@@ -13,13 +13,6 @@ $gameinfos = [
     // Name of the game in English (will serve as the basis for translation)
     'game_name' => 'Scopa',
 
-    // Unknown creators
-    'designer' => '',
-    'artist' => '',
-
-    // Year of FIRST publication of this game. Can be negative.
-    'year' => 1600,
-
     // Game in public domain
     'publisher' => '(Public Domain)',
     'publisher_website' => '',
@@ -52,11 +45,6 @@ $gameinfos = [
     // Language is irrelevant for the game
     'language_dependency' => false,
 
-    'complexity' => 2,
-    'luck' => 3,
-    'strategy' => 4,
-    'diplomacy' => 1,
-
     // Colors attributed to players
     'player_colors' => ['ff0000', '008000', '0000ff', 'ffa500', '773300'],
     'favorite_colors_support' => true,
@@ -69,16 +57,6 @@ $gameinfos = [
         'min' => 320,
         'max' => null,
     ],
-
-    // Game presentation
-    'presentation' => [
-        totranslate('Scopa is a traditional Italian game of cards.'),
-        totranslate('Its exact origin is lost to History, but the game goes on, with several variants.'),
-        totranslate('Taking turns, each player tries to capture cards. Extra points are awarded for the Sette bello (7 of coins) & other coin cards. Performing a Scopa (sweeping all cards) during the game is awarded by an extra point.'),
-    ],
-
-    // Games categories
-    'tags' => [2, 23, 30, 200],
 
     'disable_player_order_swap_on_rematch' => true,
 
