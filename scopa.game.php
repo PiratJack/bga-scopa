@@ -72,8 +72,7 @@ class scopa extends Table {
         $this->combineCards($combinations, $table);
 
         // Depending on option, reduce combinations to 2 cards max
-        if (SCP_OPTION_MAX_CAPTURE_2 == $this->getGameStateValue('max_capture_cards'))
-        {
+        if (SCP_OPTION_MAX_CAPTURE_2 == $this->getGameStateValue('max_capture_cards')) {
             $combinations = array_filter(
                 $combinations,
                 function ($value) {
@@ -87,10 +86,8 @@ class scopa extends Table {
         $possible_actions = [];
 
         // In Scopa di Quindici & Escoba, capture is possible if the sum of cards is 15
-        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA_DI_QUINDICI, SCP_VARIANT_ESCOBA, SCP_VARIANT_ESCOBA_NO_PRIME]))
-        {
-            foreach ($hand as $card_id => $card)
-            {
+        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA_DI_QUINDICI, SCP_VARIANT_ESCOBA, SCP_VARIANT_ESCOBA_NO_PRIME])) {
+            foreach ($hand as $card_id => $card) {
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
                     function ($value) use ($card) {
@@ -99,10 +96,8 @@ class scopa extends Table {
                 );
             }
         } // In Asso piglia tutto (simplified), Aces capture everything
-        elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO)
-        {
-            foreach ($hand as $card_id => $card)
-            {
+        elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO) {
+            foreach ($hand as $card_id => $card) {
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
                     function ($value) use ($card, $nb_table_cards) {
@@ -114,8 +109,7 @@ class scopa extends Table {
         // In Asso piglia tutto (traditional), Aces capture everything with 2 conditions:
         // - There is no ace on table
         // - You're not the first player
-        elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL)
-        {
+        elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL) {
             $ace_on_table = count(array_filter($table, function ($card) {
                 return $card['type_arg'] == 1;
             })) > 0;
@@ -123,8 +117,7 @@ class scopa extends Table {
 
             $ace_captures_all = !$ace_on_table && !$first_player_first_round;
 
-            foreach ($hand as $card_id => $card)
-            {
+            foreach ($hand as $card_id => $card) {
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
                     function ($value) use ($card, $ace_captures_all, $nb_table_cards) {
@@ -138,8 +131,7 @@ class scopa extends Table {
         // - The sum of cards on the table + the card played is equal to 15
         // - Ace captures all cards (unless there's an ace on the table)
         // If multiple combinations are possible, any is possible (no need to capture the least number of cards)
-        elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA)
-        {
+        elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA) {
             $ace_on_table = count(array_filter($table, function ($card) {
                 return $card['type_arg'] == 1;
             })) > 0;
@@ -147,20 +139,17 @@ class scopa extends Table {
             $ace_captures_all = !$ace_on_table;
 
 
-            foreach ($hand as $card_id => $card)
-            {
+            foreach ($hand as $card_id => $card) {
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
                     function ($value) use ($card, $ace_captures_all, $nb_table_cards) {
                         // Replace 7 of cup with joker value
-                        if ($card['type'] == 2 && $card['type_arg'] == 7)
-                        {
+                        if ($card['type'] == 2 && $card['type_arg'] == 7) {
                             $card['type_arg'] = self::getGameStateValue('cirulla_joker_value');
                         }
 
                         // Ace captures the entire table, unless there's an ace on table
-                        if ($card['type_arg'] == 1 && $ace_captures_all)
-                        {
+                        if ($card['type_arg'] == 1 && $ace_captures_all) {
                             return $value['size'] == $nb_table_cards;
                         }
 
@@ -169,9 +158,7 @@ class scopa extends Table {
                     }
                 );
             }
-        }
-        else
-        {
+        } else {
             // Remove combinations > 10 points (can't be captured)
             $combinations = array_filter(
                 $combinations,
@@ -181,8 +168,7 @@ class scopa extends Table {
             );
 
             // Keep combinations if total cards = card in hand
-            foreach ($hand as $card_id => $card)
-            {
+            foreach ($hand as $card_id => $card) {
                 $possible_actions[$card_id] = array_filter(
                     $combinations,
                     function ($value) use ($card) {
@@ -194,13 +180,10 @@ class scopa extends Table {
 
         // Keep only the combination that has the smallest number of cards
         // In Scopa Frac & Cirulla, we can capture as many cards as wanted (not only the minimum number)
-        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA_FRAC, SCP_VARIANT_CIRULLA]))
-        {
-            foreach ($possible_actions as $card_id => $combinations)
-            {
+        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA_FRAC, SCP_VARIANT_CIRULLA])) {
+            foreach ($possible_actions as $card_id => $combinations) {
                 // Remove cards that have no combination possible
-                if (0 == count($combinations))
-                {
+                if (0 == count($combinations)) {
                     unset($possible_actions[$card_id]);
 
                     continue;
@@ -211,11 +194,9 @@ class scopa extends Table {
             return $possible_actions;
         }
 
-        foreach ($possible_actions as $card_id => $combinations)
-        {
+        foreach ($possible_actions as $card_id => $combinations) {
             // Remove cards that have no combination possible
-            if (0 == count($combinations))
-            {
+            if (0 == count($combinations)) {
                 unset($possible_actions[$card_id]);
 
                 continue;
@@ -236,8 +217,7 @@ class scopa extends Table {
             // array_values forces a re-indexing, which means Javascript will see it as an array and not an object
 
             // In Asso piglia tutto (simplified), Aces capture everything
-            if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_ASSO_PIGLIA_TUTTO]))
-            {
+            if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_ASSO_PIGLIA_TUTTO])) {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
                         $combinations,
@@ -250,8 +230,7 @@ class scopa extends Table {
             // In Asso piglia tutto (traditionnal), Aces capture everything with 2 conditions:
             // - There is no ace on table
             // - You're not the first player
-            elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL)
-            {
+            elseif ($this->getGameStateValue('game_variant') == SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL) {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
                         $combinations,
@@ -262,11 +241,9 @@ class scopa extends Table {
                 );
             }
             // If all captures are allowed except if a single card matches
-            elseif ($allow_all_captures_except_single)
-            {
+            elseif ($allow_all_captures_except_single) {
                 // There is a single card matching
-                if ($min_cards == 1)
-                {
+                if ($min_cards == 1) {
                     $possible_actions[$card_id] = array_values(
                         array_filter(
                             $combinations,
@@ -277,19 +254,16 @@ class scopa extends Table {
                     );
                 }
                 // There is no single card matching ==> can capture anything
-                else
-                {
+                else {
                     $possible_actions[$card_id] = array_values($combinations);
                 }
             }
             // If all captures are allowed, just apply array_values
-            elseif ($allow_all_captures)
-            {
+            elseif ($allow_all_captures) {
                 $possible_actions[$card_id] = array_values($combinations);
             }
             // In regular play, it's possible to capture only the minimum number of cards
-            else
-            {
+            else {
                 $possible_actions[$card_id] = array_values(
                     array_filter(
                         $combinations,
@@ -308,8 +282,7 @@ class scopa extends Table {
     public function combineCards(&$combinations, $cards_left, $cards_included = []) {
         // cards_left's length will change over time; so we need to store it
         $nb_cards = count($cards_left);
-        foreach ($cards_left as $card_id => $card_taken)
-        {
+        foreach ($cards_left as $card_id => $card_taken) {
             unset($cards_left[$card_id]);
 
             $combination = [];
@@ -323,8 +296,7 @@ class scopa extends Table {
             $combination['size'] = count($combination['cards']);
             $combinations[] = $combination;
 
-            if (count($cards_left) > 0)
-            {
+            if (count($cards_left) > 0) {
                 $this->combineCards($combinations, $cards_left, $combination['cards']);
             }
         }
@@ -339,12 +311,10 @@ class scopa extends Table {
 
         $cards_by_type = [];
         $card_in_color = 0;
-        foreach ($cards as $card)
-        {
+        foreach ($cards as $card) {
             # Add suit/color (card type) to the list of arguments
             $arg_name = 'color_'.$card['type'];
-            if (!array_key_exists($arg_name, $args['args']))
-            {
+            if (!array_key_exists($arg_name, $args['args'])) {
                 $card_in_color = 0;
 
                 $logs[$card['type']] = '${'.$arg_name.'} : ';
@@ -378,18 +348,15 @@ class scopa extends Table {
 
     // Returns whether the active player has auto-play on
     public function getUserPreference($player_id, $pref_id) {
-        if (!isset($this->user_preferences))
-        {
+        if (!isset($this->user_preferences)) {
             $sql = 'SELECT player_id, pref_id, pref_value FROM user_preferences';
 
             $this->user_preferences = self::getDoubleKeyCollectionFromDB($sql, true);
         }
 
         $player_id = $this->getActivePlayerId();
-        if (array_key_exists($player_id, $this->user_preferences))
-        {
-            if (array_key_exists(SCP_PREF_AUTO_PLAY, $this->user_preferences[$player_id]))
-            {
+        if (array_key_exists($player_id, $this->user_preferences)) {
+            if (array_key_exists(SCP_PREF_AUTO_PLAY, $this->user_preferences[$player_id])) {
                 return $this->user_preferences[$player_id][SCP_PREF_AUTO_PLAY];
             }
         }
@@ -413,18 +380,12 @@ class scopa extends Table {
         $sum_cards = $sum_cards = array_sum(array_map(function ($v) {
             return $v['type_arg'];
         }, $cards));
-        if ($sum_cards < 10)
-        {
+        if ($sum_cards < 10) {
             $cirullaCombination = 'cirulla_less_than_10';
-        }
-        elseif (($sum_cards - 7) < 10 && $seven_cups_in_hand)
-        {
-            if (($sum_cards - 7) == 9)
-            {
+        } elseif (($sum_cards - 7) < 10 && $seven_cups_in_hand) {
+            if (($sum_cards - 7) == 9) {
                 $joker_values = [1];
-            }
-            else
-            {
+            } else {
                 $joker_values = range(1, 9 - ($sum_cards - 7));
             }
             $cirullaCombination = 'cirulla_less_than_10';
@@ -437,10 +398,8 @@ class scopa extends Table {
         $card_values = array_values(array_unique(array_map(function ($v) {
             return $v['type_arg'];
         }, $other_cards_in_hand)));
-        if (count($card_values) == 1)
-        {
-            if ($seven_cups_in_hand)
-            {
+        if (count($card_values) == 1) {
+            if ($seven_cups_in_hand) {
                 $joker_values = [$card_values[0]];
             }
 
@@ -462,12 +421,9 @@ class scopa extends Table {
 
     // Return the name of a team or player based on its ID and type
     private function getScorerNameById($scorer_id, $type) {
-        if ($type == 'player')
-        {
+        if ($type == 'player') {
             return self::getPlayerNameById($scorer_id);
-        }
-        else
-        {
+        } else {
             $this->loadTeamsBasicInfos();
             return $this->teams[$scorer_id]['team_name'];
         }
@@ -475,16 +431,13 @@ class scopa extends Table {
 
     // Returns data for all teams
     private function loadTeamsBasicInfos($players = []) {
-        if ($players == [])
-        {
+        if ($players == []) {
             $players = $this->loadPlayersBasicInfosWithTeam();
         }
 
-        if (!isset($this->teams))
-        {
+        if (!isset($this->teams)) {
             $this->teams = [];
-            for ($team_id = 1; $team_id < (count($players)/2 + 1); $team_id++)
-            {
+            for ($team_id = 1; $team_id < (count($players)/2 + 1); $team_id++) {
                 $team_players = array_filter($players, function ($v) use ($team_id) {
                     return $v['team_id'] == $team_id;
                 });
@@ -515,8 +468,7 @@ class scopa extends Table {
     // Does the same as loadPlayerBasicInfos, with the team_id added
     public function loadPlayersBasicInfosWithTeam($seats_needed = true) {
         $players = self::loadPlayersBasicInfos();
-        if ($this->isTeamPlay())
-        {
+        if ($this->isTeamPlay()) {
             $sql = 'SELECT player_id, player_score, team_id, scopa_in_round FROM player';
             $data = self::getCollectionFromDB($sql);
             $this->players_to_team = array_map(function ($v) {
@@ -524,8 +476,7 @@ class scopa extends Table {
             }, $data);
 
             $teams = array_fill_keys(array_unique($this->players_to_team), []);
-            foreach ($teams as $team_id => $temp)
-            {
+            foreach ($teams as $team_id => $temp) {
                 $teams[$team_id]['players'] = array_keys(array_filter($this->players_to_team, function ($v) use ($team_id) {
                     return $v == $team_id;
                 }));
@@ -536,8 +487,7 @@ class scopa extends Table {
             $cards_captured = self::getCollectionFromDB($sql, true);
             $cards_captured += array_fill_keys(array_keys($players), 0);
 
-            foreach ($players as $player_id => $player)
-            {
+            foreach ($players as $player_id => $player) {
                 $players[$player_id]['score'] = $data[$player_id]['player_score'];
                 $players[$player_id]['scopa_in_round'] = $data[$player_id]['scopa_in_round'];
                 $players[$player_id]['team_id'] = $this->players_to_team[$player_id];
@@ -548,9 +498,7 @@ class scopa extends Table {
                 $players[$player_id]['ally'] = array_pop($ally);
                 $players[$player_id]['cards_captured'] = $cards_captured[$player_id] + $cards_captured[$players[$player_id]['ally']];
             }
-        }
-        else
-        {
+        } else {
             $sql = 'SELECT player_id, player_score, scopa_in_round FROM player';
             $data = self::getCollectionFromDB($sql);
 
@@ -559,21 +507,18 @@ class scopa extends Table {
             $cards_captured = self::getCollectionFromDB($sql, true);
             $cards_captured += array_fill_keys(array_keys($players), 0);
 
-            foreach ($data as $player_id => $info)
-            {
+            foreach ($data as $player_id => $info) {
                 $players[$player_id]['score'] = $info['player_score'];
                 $players[$player_id]['scopa_in_round'] = $info['scopa_in_round'];
                 $players[$player_id]['cards_captured'] = $cards_captured[$player_id];
             }
         }
 
-        if ($seats_needed)
-        {
+        if ($seats_needed) {
             // Define player's seat position
             $player_order = $this->getNextPlayerTable();
             $current_player = $this->getCurrentPlayerId();
-            if (!array_key_exists($current_player, $player_order))
-            {
+            if (!array_key_exists($current_player, $player_order)) {
                 $current_player = $player_order[0];
                 $players[$current_player]['seat_position'] = 'bottom_left';
             }
@@ -581,8 +526,7 @@ class scopa extends Table {
             $player_pointer = $player_order[$current_player];
             $order = 1;
             $seat_position = $this->seat_positions[count($players)];
-            while ($current_player != $player_pointer && $order < count($players))
-            {
+            while ($current_player != $player_pointer && $order < count($players)) {
                 $players[$player_pointer]['seat_position'] = $seat_position[$order];
                 $order++;
                 $player_pointer = $player_order[$player_pointer];
@@ -607,8 +551,7 @@ class scopa extends Table {
                 GROUP BY card_location, player';
         $data = self::getDoubleKeyCollectionFromDB($sql, true);
         // Flatten the array a bit
-        if (array_key_exists('deck', $data))
-        {
+        if (array_key_exists('deck', $data)) {
             $data['deck'] = $data['deck']['deck'];
         }
 
@@ -621,18 +564,14 @@ class scopa extends Table {
         // Create any missing key (hand, capture or deck)
         $data += $data_zero;
         // Adds any missing player
-        foreach ($data as $key => $value)
-        {
-            if (is_array($value))
-            {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
                 $data[$key] += $data_zero[$key];
             }
         }
 
-        if ($this->isTeamPlay())
-        {
-            foreach ($data['capture'] as $player_id => $value)
-            {
+        if ($this->isTeamPlay()) {
+            foreach ($data['capture'] as $player_id => $value) {
                 $data['capture'][$player_id] = $players[$player_id]['cards_captured'];
             }
         }
@@ -648,8 +587,7 @@ class scopa extends Table {
 
     // Sends the cards that are in a player's hand
     private function notif_cardsInHand($player_id = 0) {
-        if (0 == $player_id)
-        {
+        if (0 == $player_id) {
             $player_id = self::getCurrentPlayerId();
         }
 
@@ -692,15 +630,13 @@ class scopa extends Table {
         $scorer_type = $this->isTeamPlay() ? 'team' : 'player';
         $scorer_name = self::getScorerNameById($scorer_id, $scorer_type);
 
-        if (!$this->isTeamPlay() && $win_type != 'sevens_captured')
-        {
+        if (!$this->isTeamPlay() && $win_type != 'sevens_captured') {
             $this->incStat(1, $win_type, $scorer_id);
         }
 
         $this->DbQuery('UPDATE player SET player_score=player_score+1 WHERE '.$scorer_type.'_id = "'.$scorer_id.'"');
 
-        if ('scopa_number' == $win_type)
-        {
+        if ('scopa_number' == $win_type) {
             $this->DbQuery('UPDATE player SET scopa_in_round=scopa_in_round+1 WHERE '.$scorer_type.'_id="'.$scorer_id.'"');
         }
 
@@ -720,8 +656,7 @@ class scopa extends Table {
             ]
         );
 
-        if (!is_null($scoring_table))
-        {
+        if (!is_null($scoring_table)) {
             ++$scoring_table['added_points'][$scorer_id];
             ++$scoring_table['final_score'][$scorer_id];
         }
@@ -773,13 +708,11 @@ class scopa extends Table {
     // A player wins points for Napola: Since it may be counted separately, I have a separate function
     private function playerWinsNapolaPoints($scorer_id, $win_type, $nb_points, &$scoring_table) {
         // Enabled through the "regular" variant dropdown
-        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_NAPOLA)
-        {
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_NAPOLA) {
             $this->playerWinsVariantPoints($scorer_id, $win_type, $nb_points, $scoring_table);
         }
         // Enabled separately ==> need to move it to a separate row (otherwise, counted twice)
-        else
-        {
+        else {
             $current_variant_scores = $scoring_table['variant'];
             $this->playerWinsVariantPoints($scorer_id, $win_type, $nb_points, $scoring_table);
             $scoring_table['napola'] = $scoring_table['variant'];
@@ -810,12 +743,9 @@ class scopa extends Table {
             ]
         );
 
-        if ($win_type == 'cirulla_dealer')
-        {
+        if ($win_type == 'cirulla_dealer') {
             $this->DbQuery('UPDATE player SET scopa_in_round=scopa_in_round+'.$nb_points.' WHERE '.$scorer_type.'_id = "'.$scorer_id.'"');
-        }
-        else
-        {
+        } else {
             $this->DbQuery('UPDATE player SET cirulla_points=cirulla_points+'.$nb_points.' WHERE '.$scorer_type.'_id = "'.$scorer_id.'"');
         }
 
@@ -829,8 +759,7 @@ class scopa extends Table {
     // There is a tie => notify everyone
     private function playerTie($tie_type) {
         // Ties are not possible for sette bello or scopa
-        if ($this->isTeamPlay())
-        {
+        if ($this->isTeamPlay()) {
             $tie_types = [
                 'cards_captured' => clienttranslate('Multiple teams captured the most cards. No point won!'),
                 'coins_captured' => clienttranslate('Multiple teams captured the most coins. No point won!'),
@@ -838,9 +767,7 @@ class scopa extends Table {
                 'il_ponino' => clienttranslate('No team captured the 4 knights. No point won!'),
                 'sevens_captured' => clienttranslate('Multiple teams captured the most sevens. No point won!'),
             ];
-        }
-        else
-        {
+        } else {
             $tie_types = [
                 'cards_captured' => clienttranslate('Multiple players captured the most cards. No point won!'),
                 'coins_captured' => clienttranslate('Multiple players captured the most coins. No point won!'),
@@ -857,20 +784,16 @@ class scopa extends Table {
     private function notif_finalScore($score_table, $scoring_rows) {
         // Format the scoring table
         $score_table_display = [];
-        if ($this->isTeamPlay())
-        {
+        if ($this->isTeamPlay()) {
             $scorers = $this->loadTeamsBasicInfos();
-        }
-        else
-        {
+        } else {
             $scorers = self::loadPlayersBasicInfos();
         }
         ksort($scorers);
 
         // First line: names
         $header = [''];
-        foreach ($scorers as $scorer_id => $scorer)
-        {
+        foreach ($scorers as $scorer_id => $scorer) {
             $header[] = [
                 'str' => '${player_name}', // called "player_name" so that JS colors the names
                 'args' => ['player_name' => isset($scorer['player_name']) ? $scorer['player_name'] : $scorer['team_name']],
@@ -881,8 +804,7 @@ class scopa extends Table {
 
         // This is used to default all scores to 0 for each row (otherwise they're not displayed)
         $scorer_to_zero = array_fill_keys(array_keys($scorers), 0);
-        foreach ($scoring_rows as $code => $label)
-        {
+        foreach ($scoring_rows as $code => $label) {
             $score = $score_table[$code];
             ksort($score);
             $score_table_display[] = [0 => $label] + $score + $scorer_to_zero;
@@ -915,8 +837,7 @@ class scopa extends Table {
     public function playCard($card_id_ajax, $cards_captured_ajax) {
         // Check if auto-play or not - if not, check player is allowed
         $state = $this->gamestate->state();
-        if ($state['name'] == 'playerTurn')
-        {
+        if ($state['name'] == 'playerTurn') {
             self::checkAction('playCard');
         }
 
@@ -927,22 +848,18 @@ class scopa extends Table {
         $cards['table'] = $this->cards->getCardsInLocation('table');
 
         // Check if received card exists and is in player's hand
-        if ($card_id_ajax < 0 || !array_key_exists($card_id_ajax, $cards['hand']))
-        {
+        if ($card_id_ajax < 0 || !array_key_exists($card_id_ajax, $cards['hand'])) {
             throw new BgaUserException(self::_('This card is not in your hand'));
         }
 
         $card_played = $this->cards->getCard($card_id_ajax);
-        if (!isset($card_played))
-        {
+        if (!isset($card_played)) {
             throw new BgaVisibleSystemException(self::_('This card is nowhere to be found'));
         }
 
         // Check if received cards captured makes sense (= no negative value, ...)
-        foreach ($cards_captured_ajax as $card)
-        {
-            if ($card < 0 || !array_key_exists($card, $cards['table']))
-            {
+        foreach ($cards_captured_ajax as $card) {
+            if ($card < 0 || !array_key_exists($card, $cards['table'])) {
                 throw new BgaUserException(self::_('Those cards are not on the table'));
             }
         }
@@ -951,8 +868,7 @@ class scopa extends Table {
         $possible_captures = $this->getCardCaptures($player_id);
 
         $capture = [];
-        if (!array_key_exists($card_played['id'], $possible_captures))
-        {
+        if (!array_key_exists($card_played['id'], $possible_captures)) {
             $this->cards->moveCard($card_played['id'], 'table');
 
             self::notifyAllPlayers(
@@ -969,21 +885,16 @@ class scopa extends Table {
                     'color_label' => $this->colors[$card_played['type']]['name'],
                 ]
             );
-        }
-        else
-        {
+        } else {
             // Single capture possible
-            if (1 == count($possible_captures[$card_played['id']]))
-            {
+            if (1 == count($possible_captures[$card_played['id']])) {
                 $capture = $possible_captures[$card_played['id']][0]['cards'];
             }
 
             // Multiple combinations possible ==> get the right one
-            else
-            {
+            else {
                 sort($cards_captured_ajax);
-                foreach ($possible_captures[$card_played['id']] as $possible_capture)
-                {
+                foreach ($possible_captures[$card_played['id']] as $possible_capture) {
                     $possible_capture_cards_ids = array_map(
                         function ($v) {
                             return $v['id'];
@@ -991,8 +902,7 @@ class scopa extends Table {
                         $possible_capture['cards']
                     );
                     sort($possible_capture_cards_ids);
-                    if ($possible_capture_cards_ids == $cards_captured_ajax)
-                    {
+                    if ($possible_capture_cards_ids == $cards_captured_ajax) {
                         $capture = $possible_capture['cards'];
 
                         break;
@@ -1002,8 +912,7 @@ class scopa extends Table {
 
             // Move cards to "capture" pile for that player
             $this->cards->moveCard($card_played['id'], 'capture', $player_id);
-            foreach ($capture as $card_captured)
-            {
+            foreach ($capture as $card_captured) {
                 $this->cards->moveCard($card_captured['id'], 'capture', $player_id);
             }
 
@@ -1032,19 +941,13 @@ class scopa extends Table {
 
             // Check if Scopa happened
             // Scopa Frac: no Scopa is possible
-            if ($this->getGameStateValue('game_variant') != SCP_VARIANT_SCOPA_FRAC)
-            {
-                if (0 == $this->cards->countCardInLocation('table'))
-                {
+            if ($this->getGameStateValue('game_variant') != SCP_VARIANT_SCOPA_FRAC) {
+                if (0 == $this->cards->countCardInLocation('table')) {
                     // If the player is last and it's the last round, no scopa is possible
-                    if (0 != $this->cards->countCardInLocation('deck') || 0 != $this->cards->countCardInLocation('hand'))
-                    {
-                        if ($this->isTeamPlay())
-                        {
+                    if (0 != $this->cards->countCardInLocation('deck') || 0 != $this->cards->countCardInLocation('hand')) {
+                        if ($this->isTeamPlay()) {
                             $this->playerWin($this->getPlayerTeam($player_id), 'scopa_number');
-                        }
-                        else
-                        {
+                        } else {
                             $this->playerWin($player_id, 'scopa_number');
                         }
                     }
@@ -1082,34 +985,25 @@ class scopa extends Table {
 
         [$cards, $cirullaCombination, $joker_values] = $this->getCirullaCombinations($player_id);
 
-        if ($joker_values != [])
-        {
-            if (!in_array($selected_joker_value, $joker_values))
-            {
+        if ($joker_values != []) {
+            if (!in_array($selected_joker_value, $joker_values)) {
                 throw new BgaUserException(self::_('This value is not possible.'));
             }
         }
 
         // Attribute points
-        if ($cirullaCombination == 'cirulla_less_than_10')
-        {
+        if ($cirullaCombination == 'cirulla_less_than_10') {
             $nb_points = 3;
-        }
-        elseif ($cirullaCombination == 'cirulla_three_kind')
-        {
+        } elseif ($cirullaCombination == 'cirulla_three_kind') {
             $nb_points = 10;
         }
-        if ($this->isTeamPlay())
-        {
+        if ($this->isTeamPlay()) {
             $this->playerWinsCirullaPoints($this->getPlayerTeam($player_id), $cirullaCombination, $nb_points, $cards);
-        }
-        else
-        {
+        } else {
             $this->playerWinsCirullaPoints($player_id, $cirullaCombination, $nb_points, $cards);
         }
 
-        if ($joker_values != [])
-        {
+        if ($joker_values != []) {
             $this->setGameStateValue('cirulla_joker_value', $selected_joker_value);
             self::notifyAllPlayers(
                 'message',
@@ -1143,12 +1037,10 @@ class scopa extends Table {
     public function argCirullaDeclare() {
         $players = self::loadPlayersBasicInfos();
         $players_joker_values = [];
-        foreach ($players as $player_id => $player)
-        {
+        foreach ($players as $player_id => $player) {
             [$cards, $cirullaCombination, $joker_values] = $this->getCirullaCombinations($player_id);
 
-            if ($cirullaCombination != '')
-            {
+            if ($cirullaCombination != '') {
                 $players_joker_values[$player_id]['jokerValues'] = $joker_values;
             }
         }
@@ -1172,8 +1064,7 @@ class scopa extends Table {
         $this->cards->shuffle('deck');
 
         // In Scopone scientifico, no cards are dealt on the table
-        if (!in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPONE_SCIENTIFICO]))
-        {
+        if (!in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPONE_SCIENTIFICO])) {
             // Deal 4 cards to the table (without re-shuffling)
             $cards = $this->cards->pickCardsForLocation(4, 'deck', 'table', 0, true);
 
@@ -1184,8 +1075,7 @@ class scopa extends Table {
                     return 10 == $card['type_arg'];
                 }
             );
-            while (count($kings) >= 3)
-            {
+            while (count($kings) >= 3) {
                 $this->cards->moveAllCardsInLocation(null, 'deck');
                 $cards = $this->cards->pickCardsForLocation(4, 'deck', 'table', 0, true);
                 $kings = array_filter(
@@ -1201,9 +1091,8 @@ class scopa extends Table {
         $this->notif_cardsOnTable();
 
         // Cirulla: dealer scores 1 or 2 points based on table hands
-        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA)
-        {
-            $dealer_id = $this->getPlayerBefore($this->getNextPlayerTable()[0]);
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA) {
+            $dealer_id = $this->getPlayerBefore($this->getActivePlayerId());
 
             $seven_cups_on_table = count(array_filter($cards, function ($card) {
                 return $card['type'] == 2 && $card['type_arg'] == 7;
@@ -1216,8 +1105,7 @@ class scopa extends Table {
             // If the sum is 15, the dealer captures all and wins a point
             // The 7 of cup is a joker and can take any value between 1 and 10
             // Therefore, if other cards sum up between 5 and 14, then it would win
-            if ($sum_cards == 15 || ($seven_cups_on_table && ($sum_cards-7) >= 5 && ($sum_cards-7) <= 14))
-            {
+            if ($sum_cards == 15 || ($seven_cups_on_table && ($sum_cards-7) >= 5 && ($sum_cards-7) <= 14)) {
                 $this->playerWinsCirullaPoints($dealer_id, 'cirulla_dealer', 1, $cards, 15);
                 $this->cards->moveAllCardsInLocation('table', 'capture', null, $dealer_id);
                 self::notifyAllPlayers(
@@ -1231,8 +1119,7 @@ class scopa extends Table {
 
             // Same goes with 30 points
             // If 7 of cup, then sum between 20 and 29 would work
-            elseif ($sum_cards == 30 || ($seven_cups_on_table && ($sum_cards-7) >= 20 && ($sum_cards-7) <= 29))
-            {
+            elseif ($sum_cards == 30 || ($seven_cups_on_table && ($sum_cards-7) >= 20 && ($sum_cards-7) <= 29)) {
                 $this->playerWinsCirullaPoints($dealer_id, 'cirulla_dealer', 2, $cards, 30);
                 $this->cards->moveAllCardsInLocation('table', 'capture', null, $dealer_id);
                 self::notifyAllPlayers(
@@ -1270,21 +1157,17 @@ class scopa extends Table {
             SCP_VARIANT_CIRULLA => 3,
         ][$this->getGameStateValue('game_variant')];
         $players = self::loadPlayersBasicInfos();
-        foreach ($players as $player_id => $player)
-        {
+        foreach ($players as $player_id => $player) {
             $cards = $this->cards->pickCardsForLocation($cards_in_hand, 'deck', 'hand', $player_id, true);
             $this->notif_cardsInHand($player_id);
         }
         $this->notif_cardsCount();
 
 
-        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA)
-        {
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA) {
             $this->setGameStateValue('cirulla_joker_value', 7);
             $this->gamestate->nextState('cirullaDeclare');
-        }
-        else
-        {
+        } else {
             $this->gamestate->nextState('playerTurn');
         }
     }
@@ -1294,34 +1177,25 @@ class scopa extends Table {
         $player_id = self::getActivePlayerId();
         [$cards, $cirullaCombination, $joker_values] = $this->getCirullaCombinations($player_id);
 
-        if ($cirullaCombination == '')
-        {
+        if ($cirullaCombination == '') {
             $this->gamestate->nextState('');
         }
     }
 
     // Determines whether to distribute new cards or not
     public function stNextPlayer() {
-        if (0 == $this->cards->countCardInLocation('hand'))
-        {
+        if (0 == $this->cards->countCardInLocation('hand')) {
             $this->gamestate->nextState('handEnd');
-        }
-        else
-        {
+        } else {
             $next_player_id = self::activeNextPlayer();
             self::giveExtraTime($next_player_id);
             $next_player_cards = $this->cards->getCardsInLocation('hand', $next_player_id);
 
-            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA && count($next_player_cards) == 3)
-            {
+            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA && count($next_player_cards) == 3) {
                 $this->gamestate->nextState('cirullaDeclare');
-            }
-            elseif ($this->getPlayerAutoPlay($next_player_id) == SCP_PREF_AUTO_PLAY_YES)
-            {
+            } elseif ($this->getPlayerAutoPlay($next_player_id) == SCP_PREF_AUTO_PLAY_YES) {
                 $this->gamestate->nextState('autoPlayerTurn');
-            }
-            else
-            {
+            } else {
                 $this->gamestate->nextState('playerTurn');
             }
         }
@@ -1332,16 +1206,14 @@ class scopa extends Table {
         $player_id = self::getActivePlayerId();
 
         // Make sure the player indeed auto-plays
-        if ($this->getPlayerAutoPlay($player_id) != SCP_PREF_AUTO_PLAY_YES)
-        {
+        if ($this->getPlayerAutoPlay($player_id) != SCP_PREF_AUTO_PLAY_YES) {
             $this->gamestate->nextState('playerTurn');
         }
 
 
         $cards = $this->cards->getCardsInLocation('hand', $player_id);
         // Multiple cards ==> Manual choice
-        if (count($cards) != 1)
-        {
+        if (count($cards) != 1) {
             $this->gamestate->nextState('playerTurn');
             return;
         }
@@ -1349,12 +1221,9 @@ class scopa extends Table {
         $card = array_pop($cards);
         $possible_captures = self::getCardCaptures($player_id);
         // Capturing or not capturing, that is the question
-        if (!array_key_exists($card['id'], $possible_captures))
-        {
+        if (!array_key_exists($card['id'], $possible_captures)) {
             $this->playCard($card['id'], []);
-        }
-        elseif (count($possible_captures[$card['id']]) == 1)
-        {
+        } elseif (count($possible_captures[$card['id']]) == 1) {
             $capture = array_pop($possible_captures[$card['id']]);
             $cards_capture = array_map(function ($v) {
                 return $v['id'];
@@ -1362,8 +1231,7 @@ class scopa extends Table {
             $this->playCard($card['id'], $cards_capture);
         }
         // Multiple captures possible ==> Manual choice
-        else
-        {
+        else {
             $this->gamestate->nextState('playerTurn');
         }
     }
@@ -1371,13 +1239,10 @@ class scopa extends Table {
     // Deals new cards if possible, otherwise go to endDeck
     public function stHandEnd() {
         // If cards are left in the deck, distribute them
-        if (0 != $this->cards->countCardInLocation('deck'))
-        {
+        if (0 != $this->cards->countCardInLocation('deck')) {
             $this->activeNextPlayer();
             $this->gamestate->nextState('handStart');
-        }
-        else
-        {
+        } else {
             $this->gamestate->nextState('deckEnd');
         }
     }
@@ -1388,27 +1253,20 @@ class scopa extends Table {
         self::notifyAllPlayers('simplePause', '', ['time' => 2000]);
 
         // Give the remaining cards to one of the players (depending on option)
-        if ($this->getGameStateValue('who_captures_remaining') == SCP_WHO_CAPTURES_REMAINING_CAPTURER)
-        {
+        if ($this->getGameStateValue('who_captures_remaining') == SCP_WHO_CAPTURES_REMAINING_CAPTURER) {
             $sql = 'SELECT player_id FROM player WHERE has_last_captured = TRUE';
             $player_last_capture = self::getCollectionFromDB($sql);
-            if (1 == count($player_last_capture))
-            {
+            if (1 == count($player_last_capture)) {
                 $player_taking_cards = array_pop($player_last_capture)['player_id'];
-            }
-            else
-            {
+            } else {
                 throw new BgaVisibleSystemException(self::_('Database error - Multiple players captured last'));
             }
-        }
-        else
-        {
+        } else {
             $player_taking_cards = $this->getActivePlayerId();
         }
 
         $cards = $this->cards->getCardsInLocation('table');
-        if (count($cards) != 0)
-        {
+        if (count($cards) != 0) {
             $this->cards->moveAllCardsInLocation('table', 'capture', null, $player_taking_cards);
 
             self::notifyAllPlayers(
@@ -1429,12 +1287,10 @@ class scopa extends Table {
         $players = $this->loadPlayersBasicInfosWithTeam();
         $scorers = $players;
 
-        if ($this->isTeamPlay())
-        {
+        if ($this->isTeamPlay()) {
             $scorers = $this->loadTeamsBasicInfos();
 
-            foreach ($cards as $card_id => $card)
-            {
+            foreach ($cards as $card_id => $card) {
                 $cards[$card_id]['location_arg'] = $players[$card['location_arg']]['team_id'];
             }
         }
@@ -1454,69 +1310,55 @@ class scopa extends Table {
             'added_points' => clienttranslate('Points won this round'),
             'final_score' => clienttranslate('Final score'),
         ];
-        foreach ($scoring_rows as $code => $label)
-        {
+        foreach ($scoring_rows as $code => $label) {
             $score_table[$code] = array_fill_keys(array_keys($scorers), 0);
         }
 
         // For regular scopa, remove the "variant" row
-        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA, SCP_VARIANT_SCOPONE, SCP_VARIANT_SCOPONE_SCIENTIFICO, SCP_VARIANT_SCOPA_DI_QUINDICI, SCP_VARIANT_ASSO_PIGLIA_TUTTO, SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL]))
-        {
+        if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_SCOPA, SCP_VARIANT_SCOPONE, SCP_VARIANT_SCOPONE_SCIENTIFICO, SCP_VARIANT_SCOPA_DI_QUINDICI, SCP_VARIANT_ASSO_PIGLIA_TUTTO, SCP_VARIANT_ASSO_PIGLIA_TUTTO_TRADITIONAL])) {
             unset($scoring_rows['variant']);
-        }
-        else
-        {
+        } else {
             $game_options = $this->getTableOptions();
             $variant_id = $this->getGameStateValue('game_variant');
             $scoring_rows['variant'] = $game_options[SCP_VARIANT]['values'][$variant_id]['name'];
         }
         // Hide the Napola row if that is not enabled separately
-        if ($this->getGameStateValue('napola_variant') == SCP_VARIANT_NAPOLA_ENABLED_NO || $this->getGameStateValue('game_variant') == SCP_VARIANT_NAPOLA)
-        {
+        if ($this->getGameStateValue('napola_variant') == SCP_VARIANT_NAPOLA_ENABLED_NO || $this->getGameStateValue('game_variant') == SCP_VARIANT_NAPOLA) {
             unset($scoring_rows['napola']);
         }
 
         // Hide the Escoba row if disabled
-        if (!in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_ESCOBA, SCP_VARIANT_ESCOBA_NO_PRIME]))
-        {
+        if (!in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_ESCOBA, SCP_VARIANT_ESCOBA_NO_PRIME])) {
             unset($scoring_rows['sevens_captured']);
         }
 
         // Scoring for regular Scopa game
         $this->scoreScopa($cards, $score_table);
         // Scopa Frac: only points from variants are counted
-        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_FRAC)
-        {
+        if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_FRAC) {
             unset($scoring_rows['scopa_number']);
             unset($scoring_rows['sette_bello']);
             unset($scoring_rows['cards_captured']);
             unset($scoring_rows['coins_captured']);
             unset($scoring_rows['prime_score']);
-        }
-        else
-        {
+        } else {
             $this->scoreSetteBello($cards, $score_table);
             $this->scoreCardsCaptured($cards, $score_table);
             $this->scoreCoinsCaptured($cards, $score_table);
-            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ESCOBA_NO_PRIME)
-            {
+            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ESCOBA_NO_PRIME) {
                 unset($scoring_rows['prime_score']);
-            }
-            else
-            {
+            } else {
                 $this->scorePrime($cards, $score_table);
             }
         }
 
         // Score for Napola
-        if ($this->getGameStateValue('napola_variant') == SCP_VARIANT_NAPOLA_ENABLED_YES || $this->getGameStateValue('game_variant') == SCP_VARIANT_NAPOLA)
-        {
+        if ($this->getGameStateValue('napola_variant') == SCP_VARIANT_NAPOLA_ENABLED_YES || $this->getGameStateValue('game_variant') == SCP_VARIANT_NAPOLA) {
             $this->scoreNapola($cards, $score_table);
         }
 
         // Score for variants
-        switch ($this->getGameStateValue('game_variant'))
-        {
+        switch ($this->getGameStateValue('game_variant')) {
             case SCP_VARIANT_IL_PONINO:
                 $this->scoreIlPonino($cards, $score_table);
                 break;
@@ -1544,23 +1386,18 @@ class scopa extends Table {
         }
 
         // Scopa frac: you can't win points that way
-        if ($this->getGameStateValue('game_variant') != SCP_VARIANT_SCOPA_FRAC)
-        {
+        if ($this->getGameStateValue('game_variant') != SCP_VARIANT_SCOPA_FRAC) {
             // Get the winners in each category (except scopa & sette bello, already counted)
             $categories = ['cards_captured', 'coins_captured', 'prime_score'];
-            if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_ESCOBA, SCP_VARIANT_ESCOBA_NO_PRIME]))
-            {
+            if (in_array($this->getGameStateValue('game_variant'), [SCP_VARIANT_ESCOBA, SCP_VARIANT_ESCOBA_NO_PRIME])) {
                 $categories[] = 'sevens_captured';
             }
-            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ESCOBA_NO_PRIME)
-            {
+            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_ESCOBA_NO_PRIME) {
                 $categories = array_diff($categories, ['prime_score']);
             }
-            foreach ($categories as $category)
-            {
+            foreach ($categories as $category) {
                 // Array format is different than the others
-                if ($category == 'prime_score')
-                {
+                if ($category == 'prime_score') {
                     $scores = array_map(function ($el) {
                         return $el['args']['points'];
                     }, $score_table[$category]);
@@ -1571,9 +1408,7 @@ class scopa extends Table {
                             return $val == $high_score;
                         }
                     );
-                }
-                else
-                {
+                } else {
                     $high_score = max($score_table[$category]);
                     $winners = array_filter(
                         $score_table[$category],
@@ -1582,21 +1417,17 @@ class scopa extends Table {
                         }
                     );
                 }
-                if (1 == count($winners))
-                {
+                if (1 == count($winners)) {
                     // We have a unique winner!
                     $this->playerWin(array_keys($winners)[0], $category, $score_table);
-                }
-                else
-                {
+                } else {
                     $this->playerTie($category);
                 }
             }
         }
 
         // Calculate final score
-        foreach ($score_table['final_score'] as $player => $score)
-        {
+        foreach ($score_table['final_score'] as $player => $score) {
             $score_table['final_score'][$player] = $score_table['previous_score'][$player] + $score_table['added_points'][$player];
         }
 
@@ -1606,29 +1437,22 @@ class scopa extends Table {
         // Should we go to next round or not?
         // Is the game over or not?
         $target_score = $this->target_score_mapping[$this->getGameStateValue('target_score')];
-        if ($this->isTeamPlay())
-        {
+        if ($this->isTeamPlay()) {
             $sql = 'SELECT DISTINCT team_id, player_score
                                 FROM player
                                 WHERE player_score >= '.$target_score;
-        }
-        else
-        {
+        } else {
             $sql = 'SELECT player_id, player_score
                                 FROM player
                                 WHERE player_score >= '.$target_score;
         }
         $player_score = self::getCollectionFromDb($sql, true);
-        if (0 == count($player_score))
-        {
+        if (0 == count($player_score)) {
             // No player has enough, start new round
             $this->gamestate->nextState('dealStart');
-            if ($this->isTeamPlay())
-            {
+            if ($this->isTeamPlay()) {
                 self::notifyAllPlayers('message', clienttranslate('No team has enough points. The game continues!'), []);
-            }
-            else
-            {
+            } else {
                 self::notifyAllPlayers('message', clienttranslate('No player has enough points. The game continues!'), []);
             }
 
@@ -1642,25 +1466,18 @@ class scopa extends Table {
                 return $val == $highest_score;
             }
         );
-        if (1 != count($winners))
-        {
+        if (1 != count($winners)) {
             // At least 2 players with the same score, start a new round
-            if ($this->isTeamPlay())
-            {
+            if ($this->isTeamPlay()) {
                 self::notifyAllPlayers('message', clienttranslate('The top teams have the same score. The game continues!'), []);
-            }
-            else
-            {
+            } else {
                 self::notifyAllPlayers('message', clienttranslate('The top players have the same score. The game continues!'), []);
             }
             $this->gamestate->nextState('dealStart');
-        }
-        else
-        {
+        } else {
             // We have a winner!
             // For Scopa a perdere, invert the scores so that winner has the highest one
-            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_A_PERDERE)
-            {
+            if ($this->getGameStateValue('game_variant') == SCP_VARIANT_SCOPA_A_PERDERE) {
                 self::DbQuery('UPDATE player SET player_score = -player_score');
             }
 
@@ -1675,12 +1492,9 @@ class scopa extends Table {
     // Scores scopa points (= who sweeped the table)
     private function scoreScopa($cards, &$score_table) {
         // Scopa score is from DB directly
-        if ($this->isTeamPlay())
-        {
+        if ($this->isTeamPlay()) {
             $sql = 'SELECT DISTINCT team_id, player_score score, scopa_in_round, cirulla_points FROM player';
-        }
-        else
-        {
+        } else {
             $sql = 'SELECT player_id, player_score score, scopa_in_round, cirulla_points FROM player';
         }
         $values = self::getCollectionFromDb($sql);
@@ -1708,8 +1522,7 @@ class scopa extends Table {
             return $v['type'] == 1 && $v['type_arg'] == 7;
         });
         $sette_bello = array_pop($card);
-        if ('capture' != $sette_bello['location'])
-        {
+        if ('capture' != $sette_bello['location']) {
             throw new BgaVisibleSystemException(self::_('Invalid state: 7 of coins in unexpected place'));
         }
         $this->playerWin($sette_bello['location_arg'], 'sette_bello', $score_table);
@@ -1721,8 +1534,7 @@ class scopa extends Table {
         $cardsCaptured = array_fill_keys(array_unique(array_map(function ($v) {
             return $v['location_arg'];
         }, $cards)), 0);
-        foreach ($cardsCaptured as $player_id => $temp)
-        {
+        foreach ($cardsCaptured as $player_id => $temp) {
             $cardsCaptured[$player_id] = count(array_filter($cards, function ($v) use ($player_id) {
                 return $v['location_arg'] == $player_id;
             }));
@@ -1736,8 +1548,7 @@ class scopa extends Table {
         $coinsCaptured = array_fill_keys(array_unique(array_map(function ($v) {
             return $v['location_arg'];
         }, $cards)), 0);
-        foreach ($coinsCaptured as $player_id => $temp)
-        {
+        foreach ($coinsCaptured as $player_id => $temp) {
             $coinsCaptured[$player_id] = count(array_filter($cards, function ($v) use ($player_id) {
                 return $v['location_arg'] == $player_id && $v['type'] == 1;
             }));
@@ -1748,23 +1559,18 @@ class scopa extends Table {
 
     // Scores Prime points (= complex calculation)
     private function scorePrime($cards, &$score_table) {
-        if ($this->isTeamPlay())
-        {
+        if ($this->isTeamPlay()) {
             $scorers = $this->loadTeamsBasicInfos();
-        }
-        else
-        {
+        } else {
             $scorers = $this->loadPlayersBasicInfos();
         }
         $scorers_prime = array_fill_keys(array_keys($scorers), ['str' => '${points}', 'args' => ['prime_score_details' => '<br />','points' => 0]]);
         $point_per_card = $this->prime_points;
-        foreach ($scorers_prime as $scorer_id => $colors)
-        {
+        foreach ($scorers_prime as $scorer_id => $colors) {
             $scorer_cards = array_filter($cards, function ($v) use ($scorer_id) {
                 return $v['location_arg'] == $scorer_id;
             });
-            foreach (['1', '2', '3', '4'] as $color_id)
-            {
+            foreach (['1', '2', '3', '4'] as $color_id) {
                 $cards_of_color = array_filter(
                     $scorer_cards,
                     function ($card) use ($color_id) {
@@ -1781,8 +1587,7 @@ class scopa extends Table {
                     },
                     $cards_of_color
                 );
-                if (!empty($prime_points))
-                {
+                if (!empty($prime_points)) {
                     $prime_point_color = max(array_column($prime_points, 'points'));
                     $card_giving_point = array_filter($prime_points, function ($card) use ($prime_point_color) {
                         return $card['points'] == $prime_point_color;
@@ -1814,10 +1619,8 @@ class scopa extends Table {
             return $v['type_arg'] == 9;
         });
         $playerWithAll = array_pop($knights)['location_arg'];
-        foreach ($knights as $knight)
-        {
-            if ($knight['location_arg'] != $playerWithAll)
-            {
+        foreach ($knights as $knight) {
+            if ($knight['location_arg'] != $playerWithAll) {
                 $this->playerTie('il_ponino');
                 return;
             }
@@ -1831,8 +1634,7 @@ class scopa extends Table {
         $players = array_unique(array_map(function ($v) {
             return $v['location_arg'];
         }, $cards));
-        foreach ($players as $player_id)
-        {
+        foreach ($players as $player_id) {
             $coinsCaptured = array_filter($cards, function ($v) use ($player_id) {
                 return $v['location_arg'] == $player_id && $v['type'] == 1;
             });
@@ -1842,19 +1644,16 @@ class scopa extends Table {
             }, $coinsCaptured));
 
             $max_coin_captured = 0;
-            while (in_array($max_coin_captured+1, $coinsCaptured))
-            {
+            while (in_array($max_coin_captured+1, $coinsCaptured)) {
                 $max_coin_captured++;
             }
 
-            if ($max_coin_captured > 0)
-            {
+            if ($max_coin_captured > 0) {
                 break;
             }
         }
 
-        if ($max_coin_captured > 2)
-        {
+        if ($max_coin_captured > 2) {
             $this->playerWinsNapolaPoints($player_id, 'napola', $max_coin_captured, $score_table);
         }
     }
@@ -1869,18 +1668,15 @@ class scopa extends Table {
         });
 
         $teamWithAll = $coin_cards[0]['location_arg'];
-        foreach ($coin_cards as $card)
-        {
-            if ($card['location_arg'] != $teamWithAll)
-            {
+        foreach ($coin_cards as $card) {
+            if ($card['location_arg'] != $teamWithAll) {
                 $teamWithAll = 0;
             }
             // Each of A, 2 and 3 of coin is worth 1, 2 or 3 points
             $this->playerWinsVariantPoints($card['location_arg'], 'scopone_de_trente', (int)$card['type_arg'], $score_table, $this->values_label[$card['type_arg']]);
         }
         // The team with all 3 wins
-        if ($teamWithAll != 0)
-        {
+        if ($teamWithAll != 0) {
             $this->playerWinsVariantPoints($teamWithAll, 'scopone_de_trente_all', 100, $score_table);
         }
     }
@@ -1905,8 +1701,7 @@ class scopa extends Table {
             return $v['location_arg'];
         }, $cardsWorthPoints));
 
-        foreach ($players as $player_id)
-        {
+        foreach ($players as $player_id) {
             $cardsCaptured = array_filter($cardsWorthPoints, function ($card) use ($player_id) {
                 return $card['location_arg'] == $player_id;
             });
@@ -1924,13 +1719,11 @@ class scopa extends Table {
             return $v['location_arg'];
         }, $seven_captured));
 
-        foreach ($players as $player_id)
-        {
+        foreach ($players as $player_id) {
             $score_table['sevens_captured'][$player_id] = count(array_filter($seven_captured, function ($v) use ($player_id) {
                 return $v['location_arg'] == $player_id;
             }));
-            if ($score_table['sevens_captured'][$player_id] == 4)
-            {
+            if ($score_table['sevens_captured'][$player_id] == 4) {
                 $this->playerWinsVariantPoints($player_id, 'escoba_all_sevens', 1, $score_table);
             }
         }
@@ -1940,20 +1733,16 @@ class scopa extends Table {
     // Capturing all coins means an immediate win
     private function scoreCirulla($cards, &$score_table) {
         // Mark scores from the beginning of the hands
-        if ($this->isTeamPlay())
-        {
+        if ($this->isTeamPlay()) {
             $sql = 'SELECT DISTINCT team_id, cirulla_points FROM player';
-        }
-        else
-        {
+        } else {
             $sql = 'SELECT player_id, cirulla_points FROM player';
         }
         $values = self::getCollectionFromDb($sql, true);
 
         $score_table['variant'] = $values;
 
-        foreach ($values as $player_id => $points)
-        {
+        foreach ($values as $player_id => $points) {
             $score_table['added_points'][$player_id] += $points;
             $score_table['final_score'][$player_id] += $points;
         }
@@ -1964,8 +1753,7 @@ class scopa extends Table {
         }, $cards));
 
         // Score Picolla points: A+2+3 of coin is worth 3, A+2+3+4 is worth 4, A+2+3+4+5 is worth 5, A+2+3+4+5+6 is worth 6
-        foreach ($players as $player_id)
-        {
+        foreach ($players as $player_id) {
             $coinsCaptured = array_filter($cards, function ($v) use ($player_id) {
                 return $v['location_arg'] == $player_id && $v['type'] == 1;
             });
@@ -1976,33 +1764,28 @@ class scopa extends Table {
 
 
             // Capture all = immediate victory
-            if (count($coinsCaptured) == 10)
-            {
+            if (count($coinsCaptured) == 10) {
                 $this->playerWinsVariantPoints($player_id, 'cirulla_all', 100, $score_table);
                 return;
             }
 
             // Combinations starting with 1
             $max_coin_captured = 0;
-            while (in_array($max_coin_captured+1, $coinsCaptured) && $max_coin_captured < 6)
-            {
+            while (in_array($max_coin_captured+1, $coinsCaptured) && $max_coin_captured < 6) {
                 $max_coin_captured++;
             }
 
-            if ($max_coin_captured > 0)
-            {
+            if ($max_coin_captured > 0) {
                 break;
             }
         }
 
-        if ($max_coin_captured > 2)
-        {
+        if ($max_coin_captured > 2) {
             $this->playerWinsVariantPoints($player_id, 'cirulla_picolla', $max_coin_captured, $score_table, $max_coin_captured);
         }
 
         // Score la grande: J+K+Q of coin is worth 5
-        foreach ($players as $player_id)
-        {
+        foreach ($players as $player_id) {
             $coinsCaptured = array_filter($cards, function ($v) use ($player_id) {
                 return $v['location_arg'] == $player_id && $v['type'] == 1;
             });
@@ -2011,8 +1794,7 @@ class scopa extends Table {
                 return (int)$v['type_arg'];
             }, $coinsCaptured));
 
-            if (count(array_intersect([8, 9, 10], $coinsCaptured)) == 3)
-            {
+            if (count(array_intersect([8, 9, 10], $coinsCaptured)) == 3) {
                 $this->playerWinsVariantPoints($player_id, 'cirulla_grande', 5, $score_table);
                 break;
             }
@@ -2027,28 +1809,22 @@ class scopa extends Table {
     public function zombieTurn($state, $active_player) {
         $statename = $state['name'];
 
-        if ($statename === 'playerTurn')
-        {
+        if ($statename === 'playerTurn') {
             // Choose which card to play
             $cards = $this->cards->getCardsInLocation('hand', $active_player);
             $card = $this->getRandomElement($cards);
 
             $captures = $this->getCardCaptures($active_player);
             // Can't capture, just play
-            if (!array_key_exists($card['id'], $captures))
-            {
+            if (!array_key_exists($card['id'], $captures)) {
                 $capture = [];
-            }
-            else
-            {
+            } else {
                 // Single capture possible: just do it!
-                if (1 == count($captures[$card['id']]))
-                {
+                if (1 == count($captures[$card['id']])) {
                     $capture_cards = reset($captures[$card['id']])['cards'];
                 }
                 // Multiple captures possible: Choose one
-                else
-                {
+                else {
                     $capture_cards = $this->getRandomElement($captures[$card['id']])['cards'];
                 }
                 $capture = array_map(
@@ -2062,9 +1838,7 @@ class scopa extends Table {
             $this->playCard($card['id'], $capture);
 
             return;
-        }
-        else
-        {
+        } else {
             $this->gamestate->nextState('');
             return;
         }
@@ -2089,8 +1863,7 @@ class scopa extends Table {
 
     public function upgradeTableDb($from_version) {
         // Added display preferences
-        if ($from_version <= 2110081254)
-        {
+        if ($from_version <= 2110081254) {
             $sql = 'ALTER TABLE DBPREFIX_player ADD `card_deck` VARCHAR(20) NOT NULL DEFAULT "italian",
                      ADD `display_card_labels` BOOLEAN NOT NULL DEFAULT 1';
 
@@ -2098,8 +1871,7 @@ class scopa extends Table {
         }
 
         // Moved preferences to BGA's framework & an actual table (if needed in PHP)
-        if ($from_version <= 2110091744)
-        {
+        if ($from_version <= 2110091744) {
             $sql = 'ALTER TABLE DBPREFIX_player DROP `card_deck`,
                      DROP `display_card_labels`';
 
@@ -2115,19 +1887,16 @@ class scopa extends Table {
         }
 
         // Added possibility to play in teams
-        if ($from_version <= 2110111902)
-        {
+        if ($from_version <= 2110111902) {
             $sql = 'ALTER TABLE DBPREFIX_player ADD `team_id` INT NOT NULL';
 
             self::applyDbUpgradeToAllDB($sql);
         }
         // Added possibility to play in teams
-        if ($from_version <= 2111141815)
-        {
+        if ($from_version <= 2111141815) {
             $sql = 'ALTER TABLE DBPREFIX_player ADD `cirulla_points` INT NOT NULL';
 
-            if (!self::getUniqueValueFromDB("SHOW COLUMNS FROM player LIKE 'cirulla_points'"))
-            {
+            if (!self::getUniqueValueFromDB("SHOW COLUMNS FROM player LIKE 'cirulla_points'")) {
                 self::applyDbUpgradeToAllDB($sql);
             }
         }
@@ -2184,37 +1953,28 @@ class scopa extends Table {
 
         $team_id = 0;
         $teams = [0 => [], 1 => []];
-        if (count($players) == 6)
-        {
+        if (count($players) == 6) {
             $teams[2] = [];
         }
         // What is the order as displayed in the lobby?
         // Undocumented column player_table_order ==> default is just based on the foreach order
         $players_order = [];
-        foreach ($players as $player_id => $player)
-        {
-            if ($team_composition == SCP_TEAM_COMPOSITION_RANDOM)
-            {
+        foreach ($players as $player_id => $player) {
+            if ($team_composition == SCP_TEAM_COMPOSITION_RANDOM) {
                 $players_order[$player_id] = count($players_order) + 1;
-            }
-            elseif (array_key_exists('player_table_order', $player))
-            {
+            } elseif (array_key_exists('player_table_order', $player)) {
                 $players_order[$player_id] = $player['player_table_order'];
-            }
-            else
-            {
+            } else {
                 $players_order[$player_id] = count($players_order) + 1;
             }
         }
         asort($players_order);
 
-        foreach ($players_order as $player_id => $player_order)
-        {
+        foreach ($players_order as $player_id => $player_order) {
             $player = $players[$player_id];
             $color = array_shift($default_colors);
 
-            switch ($team_composition)
-            {
+            switch ($team_composition) {
                 case SCP_TEAM_COMPOSITION_RANDOM:
                     $teams[$team_id][] = $player_id;
                     $team_id ++;
@@ -2229,8 +1989,7 @@ class scopa extends Table {
                     $new_order = $team_id+(count($teams[$team_id])-1)*count($teams);
                     $player['player_no'] = $new_order - $random_dealer+1;
             }
-            if ($player['player_no'] < 0)
-            {
+            if ($player['player_no'] < 0) {
                 $player['player_no'] += count($players);
             }
 
@@ -2253,10 +2012,8 @@ class scopa extends Table {
 
         // Prepare card deck
         $cards = [];
-        foreach ($this->colors as $color_id => $color) // coin, cup, sword, club
-        {
-            foreach ($this->values_label as $value_id => $value) //  1, 2, 3, 4, ... K
-            {
+        foreach ($this->colors as $color_id => $color) { // coin, cup, sword, club
+            foreach ($this->values_label as $value_id => $value) { //  1, 2, 3, 4, ... K
                 $cards[] = ['type' => $color_id, 'type_arg' => $value_id, 'nbr' => 1];
             }
         }
@@ -2303,17 +2060,14 @@ class scopa extends Table {
                 FROM card where card_location in ("hand", "deck")
                 GROUP BY location ';
         $result['players_hand'] = self::getCollectionFromDb($sql, true);
-        foreach ($result['players'] as $player_id => $player)
-        {
-            if (!array_key_exists($player_id, $result['players_hand']))
-            {
+        foreach ($result['players'] as $player_id => $player) {
+            if (!array_key_exists($player_id, $result['players_hand'])) {
                 $result['players_hand'][$player_id] = 0;
             }
         }
 
         // Same for the deck
-        if (!array_key_exists('deck', $result['players_hand']))
-        {
+        if (!array_key_exists('deck', $result['players_hand'])) {
             $result['players_hand']['deck'] = 0;
         }
 
