@@ -1092,7 +1092,7 @@ class scopa extends Table {
 
         // Cirulla: dealer scores 1 or 2 points based on table hands
         if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA) {
-            $dealer_id = $this->getPlayerBefore($this->getNextPlayerTable()[0]);
+            $dealer_id = $this->getPlayerBefore($this->getActivePlayerId());
 
             $seven_cups_on_table = count(array_filter($cards, function ($card) {
                 return $card['type'] == 2 && $card['type_arg'] == 7;
