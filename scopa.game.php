@@ -1092,7 +1092,7 @@ class scopa extends Table {
 
         // Cirulla: dealer scores 1 or 2 points based on table hands
         if ($this->getGameStateValue('game_variant') == SCP_VARIANT_CIRULLA) {
-            $dealer_id = $this->getPlayerBefore($this->getActivePlayerId());
+            $dealer_id = $this->getPlayerBefore($this->getNextPlayerTable()[0]);
 
             $seven_cups_on_table = count(array_filter($cards, function ($card) {
                 return $card['type'] == 2 && $card['type_arg'] == 7;
@@ -1996,7 +1996,7 @@ class scopa extends Table {
             //$team_id+1 so that the first team is team 1 (easier for player + consistent with JS)
             $values[] = '("'.$player_id.'",'.$player['player_no'].',0,"'.$color.'","'.$player['player_canal'].'","'.addslashes($player['player_name']).'","'.addslashes($player['player_avatar']).'", '.($team_id+1).')';
         }
-        $sql .= implode($values, ',');
+        $sql .= implode(', ', $values);
         self::DbQuery($sql);
         self::reattributeColorsBasedOnPreferences($players, $gameinfos['player_colors']);
 
