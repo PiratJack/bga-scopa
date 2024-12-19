@@ -28,20 +28,16 @@ class view_scopa_scopa extends game_view {
         $variant = $this->game->getGameStateValue('game_variant');
         $variant_data = $game_options[SCP_VARIANT]['values'][$variant];
         $this->tpl['VARIANT_MESSAGE'] = str_replace('${variant_name}', $variant_data['name'], self::_('You are playing a game of ${variant_name}. '));
-        if ($variant != SCP_VARIANT_SCOPA)
-        {
+        if ($variant != SCP_VARIANT_SCOPA) {
             $this->tpl['VARIANT_MESSAGE'] .= str_replace('${variant_rules}', $variant_data['description'], self::_('Special rules: ${variant_rules}'));
         }
 
         // Napola notice at top of the board
         $napola_value = $this->game->getGameStateValue('napola_variant');
-        if ($napola_value == SCP_VARIANT_NAPOLA_ENABLED_YES)
-        {
+        if ($napola_value == SCP_VARIANT_NAPOLA_ENABLED_YES) {
             $napola_infos = $game_options[SCP_VARIANT_NAPOLA_ENABLED]['values'][$napola_value];
             $this->tpl['NAPOLA_MESSAGE'] = str_replace('${rules}', $napola_infos['description'], self::_('The Napola variant is enabled. ${rules}'));
-        }
-        else
-        {
+        } else {
             $this->tpl['NAPOLA_MESSAGE'] = '';
         }
 
@@ -54,15 +50,13 @@ class view_scopa_scopa extends game_view {
         $seats = ['left', 'top_left', 'right', 'top_right', 'bottom_right', 'bottom_left'];
         $this->page->begin_block("scopa_scopa", "seat");
         $this->page->begin_block("scopa_scopa", "seat_bottom");
-        foreach ($seats as $seat)
-        {
+        foreach ($seats as $seat) {
             $seat_tpl = in_array($seat, ['bottom_right', 'bottom_left'])?'seat_bottom':'seat';
             $player = array_filter($players, function ($v) use ($seat) {
                 return isset($v['seat_position']) && $v['seat_position'] == $seat;
             });
 
-            if (count($player) == 1)
-            {
+            if (count($player) == 1) {
                 $player = array_pop($player);
                 $this->page->insert_block($seat_tpl, [
                     'seat_position' => $seat,
@@ -70,9 +64,7 @@ class view_scopa_scopa extends game_view {
                     'player_id' => $player['player_id'],
                     'player_name' => $player['player_name'],
                 ]);
-            }
-            else
-            {
+            } else {
                 $this->page->insert_block($seat_tpl, [
                     'seat_position' => $seat,
                     'style' => 'visibility: hidden;',

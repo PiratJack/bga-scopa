@@ -10,13 +10,10 @@
  */
 class action_scopa extends APP_GameAction {
     public function __default() {
-        if (self::isArg('notifwindow'))
-        {
+        if (self::isArg('notifwindow')) {
             $this->view = 'common_notifwindow';
             $this->viewArgs['table'] = self::getArg('table', AT_posint, true);
-        }
-        else
-        {
+        } else {
             $this->view = 'scopa_scopa';
             self::trace('Complete reinitialization of board game');
         }
@@ -75,11 +72,9 @@ class action_scopa extends APP_GameAction {
         $pref_value = self::getArg('pref_value', AT_posint);
 
         // Check the value is correct
-        switch ($pref_id)
-        {
+        switch ($pref_id) {
             case SCP_PREF_AUTO_PLAY:
-                if (!in_array($pref_value, [SCP_PREF_AUTO_PLAY_YES,SCP_PREF_AUTO_PLAY_NO]))
-                {
+                if (!in_array($pref_value, [SCP_PREF_AUTO_PLAY_YES,SCP_PREF_AUTO_PLAY_NO])) {
                     throw new BgaUserException(str_replace('${pref_id}', $pref_id, self::_('Wrong value for user preference ${pref_id}')));
                 }
                 break;

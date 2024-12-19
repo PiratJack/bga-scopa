@@ -9,8 +9,7 @@
  * -----
  */
 
-if (!defined('SCP_VARIANT_SCOPA'))
-{
+if (!defined('SCP_VARIANT_SCOPA')) {
     define('SCP_OPTION_POINTS_TO_WIN', 100);
     define('SCP_OPTION_POINTS_TO_WIN_11', 1);
     define('SCP_OPTION_POINTS_TO_WIN_16', 2);
